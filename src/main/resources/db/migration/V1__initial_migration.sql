@@ -26,4 +26,24 @@ CREATE TABLE products (
                           updated_at timestamptz DEFAULT now()
 );
 
+CREATE TABLE carts (
+                       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                       user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+                       version BIGINT NOT NULL DEFAULT 0,
+                       created_at timestamptz DEFAULT now(),
+                       updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE cart_items (
+                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                            cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+                            product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+                            quantity INT NOT NULL CHECK (quantity >= 1),
+                            created_at timestamptz DEFAULT now(),
+                            updated_at timestamptz DEFAULT now(),
+                            CONSTRAINT uq_cartitem_cart_product UNIQUE (cart_id, product_id)
+);
+
+
+
 
