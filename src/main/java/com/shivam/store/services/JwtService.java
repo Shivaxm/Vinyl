@@ -24,7 +24,6 @@ public class JwtService {
     }
 
     public Jwt generateRefreshToken(User user) {
-        final long EXPIRATION_TIME = 604800;
         return generateToken(user, jwtConfig.getRefreshExpiration());
     }
 

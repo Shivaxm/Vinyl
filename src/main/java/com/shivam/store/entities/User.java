@@ -22,7 +22,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     @EqualsAndHashCode.Include
-    private UUID id;
+    private Long id;
 
 
     @Column(name = "email")

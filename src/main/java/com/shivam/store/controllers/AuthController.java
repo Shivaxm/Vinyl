@@ -2,9 +2,12 @@ package com.shivam.store.controllers;
 
 import com.shivam.store.config.JwtConfig;
 import com.shivam.store.dtos.JwtResponse;
+import com.shivam.store.dtos.UserDto;
 import com.shivam.store.dtos.UserRequest;
+import com.shivam.store.mappers.UserMapper;
 import com.shivam.store.repositories.UserRepository;
 import com.shivam.store.services.JwtService;
+import com.shivam.store.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -25,6 +28,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final JwtConfig jwtConfig;
+    private final UserMapper userMapper;
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@Valid @RequestBody UserRequest userRequest, HttpServletResponse response){
@@ -45,8 +49,36 @@ public class AuthController {
 
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> me() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        var id = (Long)authentication.getPrincipal();
+        var user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        var userDto = userMapper.toDto(user);
+        return ResponseEntity.ok(userDto);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponse> refresh(@CookieValue(value = "refreshToken") String refreshToken) {
+        var jwt = jwtService.parseToken(refreshToken);
+        if(jwt == null || jwt.isExpired()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        var userId = jwt.getUserId();
+        var user = userRepository.findById(userId).orElseThrow();
+        var accessToken = jwtService.generateAccessToken(user);
+
+        return ResponseEntity.ok(new JwtResponse(accessToken.toString()));
+
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Void> handleBadLogin(Exception exception) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
 }
+
