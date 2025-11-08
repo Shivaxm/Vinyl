@@ -33,7 +33,6 @@ public class AuthController {
                         userRequest.getEmail(), userRequest.getPassword()));
 
         var user = userRepository.findByEmail(userRequest.getEmail()).orElseThrow();
-        var accessToken = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
         var cookie = new Cookie("refreshToken", refreshToken.toString());

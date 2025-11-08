@@ -34,18 +34,12 @@ public class User {
 
 
     @Column(name = "role")
-    private String role;
-
-    @ColumnDefault("'ACTIVE'")
-    @Column(name = "status")
-    private String status;
+    private Role role;
 
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
 }

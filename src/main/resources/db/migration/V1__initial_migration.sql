@@ -1,49 +1,69 @@
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
+-- TABLES
 CREATE TABLE users (
-                       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                       email VARCHAR(250) NOT NULL UNIQUE,
-                       password_hash VARCHAR(250) NOT NULL,
-                       role VARCHAR(20) NOT NULL
-                           CHECK (role IN ('CUSTOMER','ADMIN')),
-                       status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE'
-                           CHECK (status IN ('ACTIVE','LOCKED','PENDING_VERIFICATION')),
-                       created_at timestamptz DEFAULT now(),
-                       updated_at timestamptz DEFAULT now()
+                       id       BIGSERIAL PRIMARY KEY,
+                       name     VARCHAR(255) NOT NULL,
+                       email    VARCHAR(255) NOT NULL,
+                       password VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE addresses (
+                           id      BIGSERIAL PRIMARY KEY,
+                           street  VARCHAR(255) NOT NULL,
+                           city    VARCHAR(255) NOT NULL,
+                           state   VARCHAR(255) NOT NULL,
+                           zip     VARCHAR(255) NOT NULL,
+                           user_id BIGINT NOT NULL
+);
+
+CREATE TABLE categories (
+                            id   SMALLSERIAL PRIMARY KEY,
+                            name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE products (
-                          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                          name TEXT NOT NULL,
-                          slug TEXT NOT NULL UNIQUE,
-                          description TEXT,
-                          price_cents BIGINT NOT NULL CHECK (price_cents >= 0),
-                          currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-                          sku TEXT NOT NULL UNIQUE,
-                          inventory_qty INT NOT NULL DEFAULT 0 CHECK (inventory_qty >= 0),
-                          is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                          created_at timestamptz DEFAULT now(),
-                          updated_at timestamptz DEFAULT now()
+                          id            BIGSERIAL PRIMARY KEY,
+                          name          VARCHAR(255)   NOT NULL,
+                          price         NUMERIC(10, 2) NOT NULL,
+                          description   TEXT           NOT NULL,
+                          category_id   SMALLINT
 );
 
-CREATE TABLE carts (
-                       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                       user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-                       version BIGINT NOT NULL DEFAULT 0,
-                       created_at timestamptz DEFAULT now(),
-                       updated_at timestamptz DEFAULT now()
+CREATE TABLE profiles (
+                          id             BIGINT PRIMARY KEY,
+                          bio            TEXT,
+                          phone_number   VARCHAR(15),
+                          date_of_birth  DATE,
+                          loyalty_points INTEGER DEFAULT 0 CHECK (loyalty_points >= 0)
 );
 
-CREATE TABLE cart_items (
-                            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-                            cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
-                            product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
-                            quantity INT NOT NULL CHECK (quantity >= 1),
-                            created_at timestamptz DEFAULT now(),
-                            updated_at timestamptz DEFAULT now(),
-                            CONSTRAINT uq_cartitem_cart_product UNIQUE (cart_id, product_id)
+CREATE TABLE wishlist (
+                          product_id BIGINT NOT NULL,
+                          user_id    BIGINT NOT NULL,
+                          PRIMARY KEY (product_id, user_id)
 );
 
+-- FOREIGN KEYS
+ALTER TABLE addresses
+    ADD CONSTRAINT addresses_users_id_fk
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE NO ACTION;
 
+ALTER TABLE products
+    ADD CONSTRAINT fk_category
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE NO ACTION;
 
+ALTER TABLE wishlist
+    ADD CONSTRAINT fk_wishlist_on_product
+        FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE;
 
+ALTER TABLE wishlist
+    ADD CONSTRAINT fk_wishlist_on_user
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE NO ACTION;
+
+ALTER TABLE profiles
+    ADD CONSTRAINT profiles_ibfk_1
+        FOREIGN KEY (id) REFERENCES users (id) ON DELETE NO ACTION;
+
+-- INDEXES (FKs don’t auto-index in Postgres)
+CREATE INDEX addresses_users_id_fk ON addresses (user_id);
+CREATE INDEX fk_category ON products (category_id);
+CREATE INDEX fk_wishlist_on_user ON wishlist (user_id);
