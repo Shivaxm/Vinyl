@@ -28,7 +28,7 @@ public class JwtService {
     }
 
     private Jwt generateToken(User user, long tokenExpiration) {
-        UUID id = user.getId();
+        Long id = user.getId();
 
         var claims = Jwts.claims().subject(user.getId().toString())
                 .add("email", user.getEmail())

@@ -1,6 +1,6 @@
 package com.shivam.store.dtos;
 
-import com.codewithmosh.store.entities.OrderStatus;
+import com.shivam.store.entities.OrderStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
