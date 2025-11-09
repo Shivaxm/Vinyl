@@ -1,0 +1,57 @@
+package com.shivam.store.payments;
+
+import com.shivam.store.entities.Order;
+import com.shivam.store.exceptions.CartNotFoundException;
+import com.shivam.store.repositories.*;
+import com.shivam.store.services.AuthService;
+import com.shivam.store.services.CartService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class CheckoutService {
+    private final CartRepository cartRepository;
+    private final OrderRepository orderRepository;
+    private final CartService cartService;
+    private final PaymentGateway paymentGateway;
+    private final AuthService authService;
+
+
+    @Transactional
+    public OrderIdDto createOrder(UUID cartId) {
+        var user = authService.getUser();
+        var cart = cartRepository.findById(cartId).orElse(null);
+
+        if (cart == null || cart.getCartItems() == null) {
+            throw new CartNotFoundException();
+        }
+
+        var order = Order.fromCart(cart, user);
+        orderRepository.save(order);
+        try{
+            var session = paymentGateway.createCheckoutSession(order);
+            cartService.clearCart(cartId);
+            return new OrderIdDto(order.getId(), session.getCheckoutUrl());
+
+        } catch (PaymentException e) {
+
+            orderRepository.delete(order);
+            throw e;
+
+        }
+
+    }
+
+    public void handleWebhookEvent(WebhookRequest webhookRequest) {
+       paymentGateway.processPayment(webhookRequest).ifPresent(paymentResult ->{
+           var order = orderRepository.findById(paymentResult.getOrderId()).orElseThrow();
+           order.setStatus(paymentResult.getPaymentStatus());
+           orderRepository.save(order);
+       });
+
+    }
+}
