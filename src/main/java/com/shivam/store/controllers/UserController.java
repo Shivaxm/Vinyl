@@ -53,7 +53,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("email", "already registered"));
         }
         var u = userMapper.toEntity(request);
-        u.setPasswordHash(passwordEncoder.encode(u.getPasswordHash()));
+        u.setPassword(passwordEncoder.encode(u.getPassword()));
         u.setRole(Role.USER);
         userRepository.save(u);
         var l = userMapper.toDto(u);
@@ -90,8 +90,8 @@ public class UserController {
         if(user == null){
             return ResponseEntity.notFound().build();
         }
-        if(user.getPasswordHash().equals(request.getOldPassword())){
-            user.setPasswordHash(request.getNewPassword());
+        if(user.getPassword().equals(request.getOldPassword())){
+            user.setPassword(request.getNewPassword());
             userRepository.save(user);
             return ResponseEntity.noContent().build();
         } 

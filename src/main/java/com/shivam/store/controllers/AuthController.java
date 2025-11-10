@@ -6,6 +6,7 @@ import com.shivam.store.dtos.UserDto;
 import com.shivam.store.dtos.UserRequest;
 import com.shivam.store.mappers.UserMapper;
 import com.shivam.store.repositories.UserRepository;
+import com.shivam.store.services.CartOwnershipService;
 import com.shivam.store.services.JwtService;
 import com.shivam.store.services.UserService;
 import jakarta.servlet.http.Cookie;
@@ -29,9 +30,11 @@ public class AuthController {
     private final JwtService jwtService;
     private final JwtConfig jwtConfig;
     private final UserMapper userMapper;
+    private final CartOwnershipService cartOwnershipService;
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@Valid @RequestBody UserRequest userRequest, HttpServletResponse response){
+    public ResponseEntity<JwtResponse> login(@Valid @RequestBody UserRequest userRequest, HttpServletResponse response,
+                                             @CookieValue(value="guestToken", required=false) String guestToken) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         userRequest.getEmail(), userRequest.getPassword()));
@@ -45,6 +48,18 @@ public class AuthController {
         cookie.setMaxAge(jwtConfig.getRefreshExpiration());
         cookie.setSecure(true);
         response.addCookie(cookie);
+
+        cartOwnershipService.promoteToUser(guestToken, user);
+
+        if (guestToken != null) {
+            Cookie clearGuest = new Cookie("guestToken", "");
+            clearGuest.setPath("/");
+            clearGuest.setHttpOnly(true);
+            clearGuest.setSecure(true);
+            clearGuest.setMaxAge(0);
+            response.addCookie(clearGuest);
+        }
+
         return ResponseEntity.ok(new JwtResponse(jwtService.generateAccessToken(user).toString()));
 
     }
@@ -64,7 +79,7 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<JwtResponse> refresh(@CookieValue(value = "refreshToken") String refreshToken) {
         var jwt = jwtService.parseToken(refreshToken);
-        if(jwt == null || jwt.isExpired()) {
+        if(jwt == null || jwt.isExpired() || jwt.isGuest()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         var userId = jwt.getUserId();

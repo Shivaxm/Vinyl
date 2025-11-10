@@ -27,6 +27,8 @@ public class Jwt {
         return Role.valueOf(claims.get("role", String.class));
     }
 
+    public boolean isGuest(){ return claims.get("type", String.class).equals("guest");}
+
     public String toString(){
         return Jwts.builder().claims(claims).signWith(secretKey).compact();
     }

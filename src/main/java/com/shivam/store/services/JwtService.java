@@ -27,12 +27,23 @@ public class JwtService {
         return generateToken(user, jwtConfig.getRefreshExpiration());
     }
 
+    public Jwt generateGuestToken(){
+        var claims = Jwts.claims().setSubject(UUID.randomUUID().toString())
+                .add("type", "guest")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 1000 * jwtConfig.getGuestExpiration()))
+                .build();
+        return new Jwt(jwtConfig.getSecretKey(), claims);
+    }
+
+
     private Jwt generateToken(User user, long tokenExpiration) {
         Long id = user.getId();
 
         var claims = Jwts.claims().subject(user.getId().toString())
                 .add("email", user.getEmail())
                 .add("role", user.getRole())
+                .add("type", "user")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * tokenExpiration))
                 .build();

@@ -7,6 +7,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @AllArgsConstructor
 public class AuthService {
@@ -14,13 +16,19 @@ public class AuthService {
     private final UserRepository userRepository;
 
     public User getUser() {
+        return findAuthenticatedUser()
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    public Optional<User> findAuthenticatedUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var id = (Long)authentication.getPrincipal();
-        var user = userRepository.findById(id).orElse(null);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found");
-        } else {
-            return user;
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return Optional.empty();
         }
+        var principal = authentication.getPrincipal();
+        if (!(principal instanceof Long id)) {
+            return Optional.empty();
+        }
+        return userRepository.findById(id);
     }
 }

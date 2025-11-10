@@ -1,5 +1,6 @@
 package com.shivam.store.payments;
 
+import com.shivam.store.carts.CartOwner;
 import com.shivam.store.entities.Order;
 import com.shivam.store.exceptions.CartNotFoundException;
 import com.shivam.store.repositories.*;
@@ -34,7 +35,7 @@ public class CheckoutService {
         orderRepository.save(order);
         try{
             var session = paymentGateway.createCheckoutSession(order);
-            cartService.clearCart(cartId);
+            cartService.clearCartAsOwner(cartId, CartOwner.authenticated(user));
             return new OrderIdDto(order.getId(), session.getCheckoutUrl());
 
         } catch (PaymentException e) {

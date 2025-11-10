@@ -1,8 +1,6 @@
 package com.shivam.store.entities;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +10,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.shivam.store.entities.CartItem;
+import com.shivam.store.entities.Product;
+
 @Getter
 @Setter
 @Entity
@@ -19,8 +20,7 @@ import java.util.UUID;
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "id", length = 36)
+    @Column(name = "id")
     private UUID id;
 
 
@@ -29,6 +29,14 @@ public class Cart {
 
     @OneToMany(mappedBy = "cart", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
     private Set<CartItem> cartItems = new LinkedHashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @Column(name = "guest_token")
+    private String guestToken;
+
 
     public BigDecimal getTotalPrice() {
         return cartItems.stream().map(CartItem::getTotalPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
