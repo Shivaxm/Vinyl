@@ -62,10 +62,15 @@ public class Cart {
 
     public void removeItem(Long productId) {
         var item = getItem(productId);
-        if (item != null) {
-            cartItems.remove(item);
-            item.setCart(null);
+        if (item == null) {
+            return;
         }
+        if (item.getQuantity() > 1) {
+            item.setQuantity(item.getQuantity() - 1);
+            return;
+        }
+        cartItems.remove(item);
+        item.setCart(null);
     }
     public void clear() {
         cartItems.clear();

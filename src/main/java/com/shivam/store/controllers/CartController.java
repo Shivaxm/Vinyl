@@ -34,44 +34,41 @@ public class CartController {
         return ResponseEntity.created(uri).body(cartDto);
     }
 
-    @PostMapping("/{cartId}/items")
+    @PostMapping("/current/items")
     @Operation(summary = "Adds item to cart")
     public ResponseEntity<CartItemDto> addProduct(
             CartOwner owner,
-            @Parameter(description = "ID of cart") @PathVariable(name = "cartId") UUID id,
             @RequestBody CartItemRequestDto prod) {
-        var cartItemDto = cartService.addProductToCart(id, prod.getId(), owner);
+        var cartItemDto = cartService.addProductToCurrentCart(prod.getId(), owner);
         return ResponseEntity.ok(cartItemDto);
     }
 
-    @GetMapping("/{cartId}")
-    public ResponseEntity<CartDto> getCart(CartOwner owner, @PathVariable(name = "cartId") UUID id) {
-        return ResponseEntity.ok(cartService.getCart(id, owner));
+    @GetMapping("/current")
+    public ResponseEntity<CartDto> getCurrentCart(CartOwner owner) {
+        return ResponseEntity.ok(cartService.getCurrentCart(owner));
     }
 
-    @PutMapping("/{cartId}/items/{productId}")
+    @PutMapping("/current/items/{productId}")
     public ResponseEntity<?> updateCartItem(
             CartOwner owner,
-            @PathVariable(name = "cartId") UUID id,
             @PathVariable(name = "productId") Long productId,
             @Valid @RequestBody UpdateCartItemRequest updateCartItemRequest) {
 
         return ResponseEntity.ok(
-                cartService.updateCartItem(id, productId, updateCartItemRequest.getQuantity(), owner));
+                cartService.updateCurrentCartItem(productId, updateCartItemRequest.getQuantity(), owner));
     }
 
-    @DeleteMapping("/{cartId}/items/{productId}")
+    @DeleteMapping("/current/items/{productId}")
     public ResponseEntity<?> deleteProduct(
             CartOwner owner,
-            @PathVariable(name = "cartId") UUID id,
             @PathVariable(name = "productId") Long productId) {
-        cartService.deleteProduct(id, productId, owner);
+        cartService.deleteProductFromCurrentCart(productId, owner);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{cartId}/items")
-    public ResponseEntity<Void> clearCart(CartOwner owner, @PathVariable(name = "cartId") UUID id) {
-        cartService.clearCart(id, owner);
+    @DeleteMapping("/current/items")
+    public ResponseEntity<Void> clearCart(CartOwner owner) {
+        cartService.clearCurrentCart(owner);
         return ResponseEntity.noContent().build();
     }
 

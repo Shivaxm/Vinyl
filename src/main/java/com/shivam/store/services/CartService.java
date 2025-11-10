@@ -25,35 +25,44 @@ public class CartService {
 
     public CartDto createCart(CartOwner owner) {
         var existing = owner.user()
-                .flatMap(cartRepository::findByUser)
-                .or(() -> owner.guestToken().flatMap(cartRepository::findByGuestToken));
+                .flatMap(cartRepository::findFirstByUserOrderByDateCreatedDesc);
 
-        if (existing.isPresent()) {
-            return cartMapper.toDto(existing.get());
+        if (existing.isEmpty() && owner.hasGuestToken()) {
+            existing = owner.guestToken().flatMap(cartRepository::findByGuestToken)
+                    .map(cart -> attachUserIfPresent(cart, owner));
         }
 
-        var cart = new Cart();
-        owner.user().ifPresent(cart::setUser);
-        owner.guestToken().ifPresent(cart::setGuestToken);
-        cartRepository.save(cart);
-        return cartMapper.toDto(cart);
+        if (existing.isEmpty()) {
+            var cart = new Cart();
+            owner.user().ifPresent(cart::setUser);
+            owner.guestToken().ifPresent(cart::setGuestToken);
+            cartRepository.save(cart);
+            return cartMapper.toDto(cart);
+        }
+
+        var resolved = attachUserIfPresent(existing.get(), owner);
+        return cartMapper.toDto(resolved);
     }
 
-    public CartItemDto addProductToCart(UUID id, Long productId, CartOwner owner) {
-        var cart = requireOwnedCart(id, owner);
+    public CartItemDto addProductToCurrentCart(Long productId, CartOwner owner) {
+        var cart = requireCurrentCart(owner);
         var product = productRepository.findById(productId).orElseThrow(ProductNotFoundException::new);
         var cartItem = cart.addItem(product);
         cartRepository.save(cart);
         return cartMapper.toCartItemDto(cartItem);
     }
 
-    public CartDto getCart(UUID id, CartOwner owner) {
-        var cart = requireOwnedCart(id, owner);
+    public CartDto getCurrentCart(CartOwner owner) {
+        var cart = requireCurrentCart(owner);
         return cartMapper.toDto(cart);
     }
 
-    public CartItemDto updateCartItem(UUID id, Long productId, Integer quantity, CartOwner owner) {
-        var cart = requireOwnedCart(id, owner);
+    public Cart getCurrentCartEntity(CartOwner owner) {
+        return requireCurrentCart(owner);
+    }
+
+    public CartItemDto updateCurrentCartItem(Long productId, Integer quantity, CartOwner owner) {
+        var cart = requireCurrentCart(owner);
         var cartItem = cart.getItem(productId);
         if (cartItem == null) {
             throw new CartItemNotFoundException();
@@ -63,26 +72,28 @@ public class CartService {
         return cartMapper.toCartItemDto(cartItem);
     }
 
-    public void deleteProduct(UUID id, Long productId, CartOwner owner) {
-        var cart = requireOwnedCart(id, owner);
+    public void deleteProductFromCurrentCart(Long productId, CartOwner owner) {
+        var cart = requireCurrentCart(owner);
         cart.removeItem(productId);
         cartRepository.save(cart);
     }
 
-    public void clearCart(UUID id, CartOwner owner) {
-        var cart = requireOwnedCart(id, owner);
+    public void clearCurrentCart(CartOwner owner) {
+        var cart = requireCurrentCart(owner);
         cart.clear();
         cartRepository.save(cart);
     }
 
-    public void clearCartAsOwner(UUID id, CartOwner owner) {
-        clearCart(id, owner);
-    }
-
     private Cart requireOwnedCart(UUID id, CartOwner owner) {
         var cart = cartRepository.findById(id).orElseThrow(CartNotFoundException::new);
+        
         if (owner.hasUser()) {
             var userId = owner.user().map(u -> u.getId()).orElseThrow(IncorrectUserException::new);
+            if (cart.getUser() == null && matchesGuestToken(cart, owner)) {
+                cart.setUser(owner.user().get());
+                cart.setGuestToken(null);
+                cartRepository.save(cart);
+            }
             if (cart.getUser() == null || !cart.getUser().getId().equals(userId)) {
                 throw new IncorrectUserException();
             }
@@ -91,12 +102,30 @@ public class CartService {
 
         if (owner.hasGuestToken()) {
             var token = owner.guestToken().orElseThrow(IncorrectUserException::new);
-            if (cart.getGuestToken() == null || !cart.getGuestToken().equals(token)) {
+            if (!matchesGuestToken(cart, owner)) {
                 throw new IncorrectUserException();
             }
             return cart;
         }
-
         throw new IncorrectUserException();
+    }
+
+    private Cart requireCurrentCart(CartOwner owner) {
+        var cartDto = createCart(owner);
+        return requireOwnedCart(cartDto.getId(), owner);
+    }
+
+    private boolean matchesGuestToken(Cart cart, CartOwner owner) {
+        var token = owner.guestToken().orElse(null);
+        return token != null && cart.getGuestToken() != null && cart.getGuestToken().equals(token);
+    }
+
+    private Cart attachUserIfPresent(Cart cart, CartOwner owner) {
+        if (owner.hasUser() && cart.getUser() == null) {
+            cart.setUser(owner.user().get());
+            cart.setGuestToken(null);
+            cartRepository.save(cart);
+        }
+        return cart;
     }
 }

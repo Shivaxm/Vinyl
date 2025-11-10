@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = ProductMapper.class)
 public interface CartMapper {
     Cart toEntity(CartDto cartDto);
-    @Mapping(target = "items", source="cartItems")
+    @Mapping(target = "items", expression = "java(cart.getCartItems().stream()\n                .sorted(java.util.Comparator.comparing(ci -> ci.getProduct().getId()))\n                .map(this::toCartItemDto)\n                .collect(java.util.stream.Collectors.toList()))")
     @Mapping(target = "totalPrice", expression="java(cart.getTotalPrice())")
     CartDto toDto(Cart cart);
     @Mapping(target = "totalPrice", expression = "java(cart.getTotalPrice())")

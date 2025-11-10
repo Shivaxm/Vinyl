@@ -38,18 +38,20 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
             NativeWebRequest webRequest,
             WebDataBinderFactory binderFactory) {
 
-        var authenticatedUser = authService.findAuthenticatedUser();
-        if (authenticatedUser.isPresent()) {
-            return CartOwner.authenticated(authenticatedUser.get());
-        }
-
         HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
         HttpServletResponse response = webRequest.getNativeResponse(HttpServletResponse.class);
         if (request == null) {
             throw new IllegalStateException("Missing HttpServletRequest");
         }
 
-        String guestToken = extractGuestToken(request)
+        var guestTokenOpt = extractGuestToken(request);
+        var authenticatedUser = authService.findAuthenticatedUser();
+        if (authenticatedUser.isPresent()) {
+            
+            return CartOwner.authenticated(authenticatedUser.get(), guestTokenOpt);
+        }
+
+        String guestToken = guestTokenOpt
                 .orElseGet(() -> issueGuestCookie(response));
 
         return CartOwner.guest(guestToken);

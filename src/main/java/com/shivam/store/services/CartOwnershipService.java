@@ -22,7 +22,7 @@ public class CartOwnershipService {
         }
 
         var guestCart = guestCartOpt.get();
-        var userCartOpt = cartRepository.findByUser(user);
+        var userCartOpt = cartRepository.findFirstByUserOrderByDateCreatedDesc(user);
 
         if (userCartOpt.isEmpty()) {
             guestCart.setUser(user);

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CartRepository extends JpaRepository<Cart, UUID> {
 
-    Optional<Cart> findByUser(User user);
+    Optional<Cart> findFirstByUserOrderByDateCreatedDesc(User user);
 
     Optional<Cart> findByGuestToken(String guestToken);
 }

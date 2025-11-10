@@ -15,7 +15,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class CheckoutService {
-    private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
     private final CartService cartService;
     private final PaymentGateway paymentGateway;
@@ -23,11 +22,14 @@ public class CheckoutService {
 
 
     @Transactional
-    public OrderIdDto createOrder(UUID cartId) {
+    public OrderIdDto createOrder(CartOwner owner) {
         var user = authService.getUser();
-        var cart = cartRepository.findById(cartId).orElse(null);
+        var effectiveOwner = owner.hasUser()
+                ? owner
+                : CartOwner.authenticated(user, owner.guestToken());
 
-        if (cart == null || cart.getCartItems() == null) {
+        var cart = cartService.getCurrentCartEntity(effectiveOwner);
+        if (cart.getCartItems() == null || cart.getCartItems().isEmpty()) {
             throw new CartNotFoundException();
         }
 
@@ -35,7 +37,7 @@ public class CheckoutService {
         orderRepository.save(order);
         try{
             var session = paymentGateway.createCheckoutSession(order);
-            cartService.clearCartAsOwner(cartId, CartOwner.authenticated(user));
+            cartService.clearCurrentCart(effectiveOwner);
             return new OrderIdDto(order.getId(), session.getCheckoutUrl());
 
         } catch (PaymentException e) {

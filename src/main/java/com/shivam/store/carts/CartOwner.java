@@ -16,6 +16,10 @@ public record CartOwner(Optional<User> user, Optional<String> guestToken) {
         return new CartOwner(Optional.of(Objects.requireNonNull(user)), Optional.empty());
     }
 
+    public static CartOwner authenticated(User user, Optional<String> guestToken) {
+        return new CartOwner(Optional.of(Objects.requireNonNull(user)), guestToken);
+    }
+
     public static CartOwner guest(String token) {
         return new CartOwner(Optional.empty(), Optional.of(Objects.requireNonNull(token)));
     }

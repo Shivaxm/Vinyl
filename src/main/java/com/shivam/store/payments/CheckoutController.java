@@ -1,11 +1,9 @@
 package com.shivam.store.payments;
 
+import com.shivam.store.carts.CartOwner;
 import com.shivam.store.dtos.ErrorDto;
 import com.shivam.store.exceptions.CartNotFoundException;
-import com.shivam.store.repositories.OrderRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +17,8 @@ public class CheckoutController {
 
     private final CheckoutService checkoutService;
     @PostMapping()
-    public OrderIdDto checkout(@Valid @RequestBody CartRequest cartId) {
-        return checkoutService.createOrder(cartId.getCartId());
+    public OrderIdDto checkout(CartOwner owner) {
+        return checkoutService.createOrder(owner);
     }
     @PostMapping("/webhook")
     public void handleWebhook(
