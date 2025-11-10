@@ -1,14 +1,15 @@
 package com.shivam.store.controllers;
 
 import com.shivam.store.dtos.ErrorDto;
+import com.shivam.store.exceptions.IncorrectUserException;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -25,6 +26,12 @@ public class GlobalExceptionHandler {
 
        return ResponseEntity.badRequest().body(map);
 
+    }
+
+    @ExceptionHandler(IncorrectUserException.class)
+    public ResponseEntity<ErrorDto> handleIncorrectUser() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorDto("You do not have access to this cart"));
     }
     
 }

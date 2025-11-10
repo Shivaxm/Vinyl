@@ -44,14 +44,14 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
             throw new IllegalStateException("Missing HttpServletRequest");
         }
 
-        var guestTokenOpt = extractGuestToken(request);
         var authenticatedUser = authService.findAuthenticatedUser();
         if (authenticatedUser.isPresent()) {
-            
-            return CartOwner.authenticated(authenticatedUser.get(), guestTokenOpt);
+            // Clear guest token cookie if present
+            clearGuestCookie(response);
+            return CartOwner.authenticated(authenticatedUser.get());
         }
 
-        String guestToken = guestTokenOpt
+        String guestToken = extractGuestToken(request)
                 .orElseGet(() -> issueGuestCookie(response));
 
         return CartOwner.guest(guestToken);
@@ -81,5 +81,17 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
         cookie.setSecure(true);
         response.addCookie(cookie);
         return guestToken;
+    }
+
+    private void clearGuestCookie(HttpServletResponse response) {
+        if (response == null) {
+            return;
+        }
+        Cookie cookie = new Cookie(GUEST_TOKEN_COOKIE, "");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setSecure(true);
+        response.addCookie(cookie);
     }
 }

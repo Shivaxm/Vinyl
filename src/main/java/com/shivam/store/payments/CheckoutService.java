@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class CheckoutService {
@@ -22,13 +20,9 @@ public class CheckoutService {
 
 
     @Transactional
-    public OrderIdDto createOrder(CartOwner owner) {
+    public OrderIdDto createOrder() {
         var user = authService.getUser();
-        var effectiveOwner = owner.hasUser()
-                ? owner
-                : CartOwner.authenticated(user, owner.guestToken());
-
-        var cart = cartService.getCurrentCartEntity(effectiveOwner);
+        var cart = cartService.getCurrentCartEntity(CartOwner.authenticated(user));
         if (cart.getCartItems() == null || cart.getCartItems().isEmpty()) {
             throw new CartNotFoundException();
         }
@@ -37,7 +31,7 @@ public class CheckoutService {
         orderRepository.save(order);
         try{
             var session = paymentGateway.createCheckoutSession(order);
-            cartService.clearCurrentCart(effectiveOwner);
+            cartService.clearCurrentCart(CartOwner.authenticated(user));
             return new OrderIdDto(order.getId(), session.getCheckoutUrl());
 
         } catch (PaymentException e) {

@@ -1,11 +1,11 @@
 package com.shivam.store.payments;
 
-import com.shivam.store.carts.CartOwner;
 import com.shivam.store.dtos.ErrorDto;
 import com.shivam.store.exceptions.CartNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -16,9 +16,11 @@ import java.util.Map;
 public class CheckoutController {
 
     private final CheckoutService checkoutService;
+
     @PostMapping()
-    public OrderIdDto checkout(CartOwner owner) {
-        return checkoutService.createOrder(owner);
+    @PreAuthorize("isAuthenticated()")
+    public OrderIdDto checkout() {
+        return checkoutService.createOrder();
     }
     @PostMapping("/webhook")
     public void handleWebhook(
