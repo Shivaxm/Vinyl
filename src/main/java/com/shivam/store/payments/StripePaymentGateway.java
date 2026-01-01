@@ -3,8 +3,8 @@ package com.shivam.store.payments;
 import com.shivam.store.entities.Order;
 import com.shivam.store.entities.OrderItem;
 import com.shivam.store.entities.OrderStatus;
-import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.checkout.Session;
@@ -25,10 +25,17 @@ public class StripePaymentGateway implements PaymentGateway {
     private String webhookSecretKey;
     public CheckoutSession createCheckoutSession(Order order) {
         try{
+            var orderId = order.getId().toString();
             var builder = SessionCreateParams.builder().setMode(SessionCreateParams.Mode.PAYMENT)
                     .setSuccessUrl(webUrl + "/checkout-success?orderId=" + order.getId())
                     .setCancelUrl(webUrl + "/checkout-cancel")
-                    .putMetadata("order_id", order.getId().toString());
+                    .setClientReferenceId(orderId)
+                    .putMetadata("order_id", orderId)
+                    .setPaymentIntentData(
+                            SessionCreateParams.PaymentIntentData.builder()
+                                    .putMetadata("order_id", orderId)
+                                    .build()
+                    );
 
 
             order.getItems().forEach(orderItem -> {
@@ -47,19 +54,23 @@ public class StripePaymentGateway implements PaymentGateway {
     @Override
     public Optional<PaymentResult> processPayment(WebhookRequest webhookRequest) {
         var payload = webhookRequest.getPayload();
-        var signature = webhookRequest.getHeaders().get("stripe-signature");
+        var signature = webhookRequest.getStripeSignature();
         try {
             var event = Webhook.constructEvent(payload, signature, webhookSecretKey);
 
-            var orderId = extractOrderId(event);
+            var orderId = extractOrderId(event).orElse(null);
+            if (orderId == null) return Optional.empty();
             switch (event.getType()) {
-                case "payment_intent.succeeded" -> {
-                    //Update order status PAID
-                        return Optional.of(new PaymentResult(orderId, OrderStatus.PAID));
+                case "checkout.session.completed" -> {
+                    // For typical card payments, Checkout Session completion implies paid.
+                    return Optional.of(new PaymentResult(orderId, OrderStatus.PAID));
                 }
-                case "payment_intent.failed" -> {
-                        return Optional.of(new PaymentResult(orderId, OrderStatus.FAILED));
-                    }
+                case "payment_intent.succeeded" -> {
+                    return Optional.of(new PaymentResult(orderId, OrderStatus.PAID));
+                }
+                case "payment_intent.payment_failed" -> {
+                    return Optional.of(new PaymentResult(orderId, OrderStatus.FAILED));
+                }
                     default -> {
                         return Optional.empty();
                     }
@@ -68,18 +79,29 @@ public class StripePaymentGateway implements PaymentGateway {
 
             }
         } catch (SignatureVerificationException e) {
-            throw new PaymentException("invalid signature");
+            throw new WebhookSignatureException("Invalid Stripe webhook signature");
         }
     }
 
-    private BigInteger extractOrderId(Event event) {
-        var stripeObject = event.getDataObjectDeserializer().getObject().orElseThrow(
-                () -> new PaymentException("Could not deserialize Stripe event")
-        );
-        var paymentIntent = (PaymentIntent) stripeObject;
+    private Optional<BigInteger> extractOrderId(Event event) {
+        var stripeObject = event.getDataObjectDeserializer().getObject().orElse(null);
+        if (stripeObject == null) return Optional.empty();
 
-        return new BigInteger(paymentIntent.getMetadata().get("order_id"));
+        if (stripeObject instanceof Session session) {
+            var orderId = session.getClientReferenceId();
+            if (orderId == null && session.getMetadata() != null) {
+                orderId = session.getMetadata().get("order_id");
+            }
+            return orderId == null ? Optional.empty() : Optional.of(new BigInteger(orderId));
+        }
 
+        if (stripeObject instanceof PaymentIntent paymentIntent) {
+            var metadata = paymentIntent.getMetadata();
+            var orderId = metadata == null ? null : metadata.get("order_id");
+            return orderId == null ? Optional.empty() : Optional.of(new BigInteger(orderId));
+        }
+
+        return Optional.empty();
     }
     private SessionCreateParams.LineItem createLineItem(OrderItem orderItem) {
         return SessionCreateParams.LineItem.builder()

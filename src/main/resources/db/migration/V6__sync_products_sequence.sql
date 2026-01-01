@@ -1,1 +1,1 @@
-SELECT setval('products_id_seq', (SELECT COALESCE(MAX(id), 1) FROM products));
+-- Sequence alignment no longer required now that seed data uses generated ids.

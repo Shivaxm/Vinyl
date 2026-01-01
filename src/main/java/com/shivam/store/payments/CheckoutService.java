@@ -18,7 +18,6 @@ public class CheckoutService {
     private final PaymentGateway paymentGateway;
     private final AuthService authService;
 
-
     @Transactional
     public OrderIdDto createOrder() {
         var user = authService.getUser();
@@ -35,12 +34,9 @@ public class CheckoutService {
             return new OrderIdDto(order.getId(), session.getCheckoutUrl());
 
         } catch (PaymentException e) {
-
             orderRepository.delete(order);
             throw e;
-
         }
-
     }
 
     public void handleWebhookEvent(WebhookRequest webhookRequest) {

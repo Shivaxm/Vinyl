@@ -1,14 +1,8 @@
 package com.shivam.store.payments;
 
-import com.shivam.store.dtos.ErrorDto;
-import com.shivam.store.exceptions.CartNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/checkout")
@@ -24,20 +18,9 @@ public class CheckoutController {
     }
     @PostMapping("/webhook")
     public void handleWebhook(
-            @RequestHeader Map<String, String> headers, @RequestBody String payload){
-        checkoutService.handleWebhookEvent(new WebhookRequest(headers, payload));
+            @RequestHeader("Stripe-Signature") String stripeSignature,
+            @RequestBody String payload
+    ) {
+        checkoutService.handleWebhookEvent(new WebhookRequest(stripeSignature, payload));
     }
-
-
-    @ExceptionHandler(CartNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleCartNotFound(Exception e) {
-        return ResponseEntity.badRequest().body(new ErrorDto(e.getMessage()));
-    }
-
-    @ExceptionHandler(PaymentException.class)
-    public ResponseEntity<ErrorDto> handlePaymentException() {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorDto("Error creating a checkout session"));
-    }
-
 }

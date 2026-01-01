@@ -32,3 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 .env
+
+# Local-only interview notes (intentionally not committed)
+INTERVIEW_GUIDE.md

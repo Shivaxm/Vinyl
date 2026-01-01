@@ -1,13 +1,14 @@
 -- TABLES
 CREATE TABLE users (
-                       id       BIGSERIAL PRIMARY KEY,
-                       name     VARCHAR(255) NOT NULL,
-                       email    VARCHAR(255) NOT NULL,
-                       password VARCHAR(255) NOT NULL
+    id       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name     VARCHAR(255) NOT NULL,
+    email    VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role     VARCHAR(50)  NOT NULL DEFAULT 'USER'
 );
 
 CREATE TABLE addresses (
-                           id      BIGSERIAL PRIMARY KEY,
+                           id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                            street  VARCHAR(255) NOT NULL,
                            city    VARCHAR(255) NOT NULL,
                            state   VARCHAR(255) NOT NULL,
@@ -16,12 +17,12 @@ CREATE TABLE addresses (
 );
 
 CREATE TABLE categories (
-                            id   SMALLSERIAL PRIMARY KEY,
+                            id   SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                             name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE products (
-                          id            BIGSERIAL PRIMARY KEY,
+                          id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                           name          VARCHAR(255)   NOT NULL,
                           price         NUMERIC(10, 2) NOT NULL,
                           description   TEXT           NOT NULL,

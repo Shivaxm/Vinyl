@@ -7,11 +7,13 @@ import com.shivam.store.dtos.UserDto;
 import com.shivam.store.entities.Role;
 import com.shivam.store.mappers.UserMapper;
 import com.shivam.store.repositories.UserRepository;
+import com.shivam.store.services.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -28,9 +30,14 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
     @GetMapping
     public List<UserDto> getAllUsers(@RequestParam(required = false, defaultValue = "", name = "sort")String sort) {
+        var currentUser = authService.getUser();
+        if (currentUser.getRole() != Role.ADMIN) {
+            throw new org.springframework.security.access.AccessDeniedException("Forbidden");
+        }
         if(!Set.of("name", "email").contains(sort)){
             sort = "name";
         }
@@ -48,7 +55,6 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody RegisterUserRequest request, UriComponentsBuilder uriBuilder) {
-        //TODO: process POST request
         if(userRepository.existsByEmail(request.getEmail())){
             return ResponseEntity.badRequest().body(Map.of("email", "already registered"));
         }
@@ -62,7 +68,11 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDto> putMethodName(@PathVariable(name = "id") long id, @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable(name = "id") long id, @RequestBody UpdateUserRequest request) {
+        var currentUser = authService.getUser();
+        if (currentUser.getRole() != Role.ADMIN && currentUser.getId() != id) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         var user = userRepository.findById(id).orElse(null);
         if(user == null){
             return ResponseEntity.notFound().build();
@@ -75,6 +85,10 @@ public class UserController {
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id){
+        var currentUser = authService.getUser();
+        if (currentUser.getRole() != Role.ADMIN && !currentUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         var user = userRepository.findById(id).orElse(null);
         if(user == null){
             return ResponseEntity.notFound().build();
@@ -86,16 +100,26 @@ public class UserController {
 
     @PostMapping("/{id}/change-password")
     public ResponseEntity<Void> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
+        var currentUser = authService.getUser();
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         var user = userRepository.findById(id).orElse(null);
         if(user == null){
             return ResponseEntity.notFound().build();
         }
-        if(user.getPassword().equals(request.getOldPassword())){
-            user.setPassword(request.getNewPassword());
+        if(passwordEncoder.matches(request.getOldPassword(), user.getPassword())){
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
             userRepository.save(user);
             return ResponseEntity.noContent().build();
         } 
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Void> handleAccessDenied() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
     
     

@@ -32,8 +32,8 @@ public class Order {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "total_price")
-    private BigDecimal totalPrice;
+    @Column(name = "total_price", nullable = false)
+    private BigDecimal totalPrice = BigDecimal.ZERO;
 
     @OneToMany(mappedBy = "order", cascade =
             {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
@@ -42,23 +42,36 @@ public class Order {
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
+        recalculateTotal();
     }
 
-    public BigDecimal getTotalPrice() {
-        return this.items.stream().map(OrderItem::getTotalPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+    public void removeItem(OrderItem item) {
+        if (items.remove(item)) {
+            item.setOrder(null);
+            recalculateTotal();
+        }
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncTotalPrice() {
+        recalculateTotal();
+    }
+
+    private void recalculateTotal() {
+        this.totalPrice = items.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public static Order fromCart(Cart cart, User user) {
         var order = new Order();
         order.setCustomer(user);
         order.setStatus(OrderStatus.PENDING);
-        var items = cart.getCartItems();
-        for (var item : items) {
+        for (var item : cart.getCartItems()) {
             var orderItem = new OrderItem(order, item.getProduct(), item.getQuantity(), item.getTotalPrice(),item.getProduct().getPrice());
             order.addItem(orderItem);
         }
-
-        order.setTotalPrice(order.getTotalPrice());
         return order;
 
     }

@@ -9,11 +9,13 @@ import com.shivam.store.repositories.UserRepository;
 import com.shivam.store.services.CartOwnershipService;
 import com.shivam.store.services.JwtService;
 import com.shivam.store.services.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,7 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
     private final UserRepository userRepository;
@@ -31,6 +33,8 @@ public class AuthController {
     private final JwtConfig jwtConfig;
     private final UserMapper userMapper;
     private final CartOwnershipService cartOwnershipService;
+    @Value("${app.cookies.secure:false}")
+    private boolean secureCookies;
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@Valid @RequestBody UserRequest userRequest, HttpServletResponse response,
@@ -42,22 +46,26 @@ public class AuthController {
         var user = userRepository.findByEmail(userRequest.getEmail()).orElseThrow();
         var refreshToken = jwtService.generateRefreshToken(user);
 
-        var cookie = new Cookie("refreshToken", refreshToken.toString());
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(jwtConfig.getRefreshExpiration());
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+        var cookie = ResponseCookie.from("refreshToken", refreshToken.toString())
+                .httpOnly(true)
+                .secure(secureCookies)
+                .path("/")
+                .maxAge(jwtConfig.getRefreshExpiration())
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         cartOwnershipService.promoteToUser(guestToken, user);
 
         if (guestToken != null) {
-            Cookie clearGuest = new Cookie("guestToken", "");
-            clearGuest.setPath("/");
-            clearGuest.setHttpOnly(true);
-            clearGuest.setSecure(true);
-            clearGuest.setMaxAge(0);
-            response.addCookie(clearGuest);
+            var clearGuest = ResponseCookie.from("guestToken", "")
+                    .httpOnly(true)
+                    .secure(secureCookies)
+                    .path("/")
+                    .maxAge(0)
+                    .sameSite("Lax")
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, clearGuest.toString());
         }
 
         return ResponseEntity.ok(new JwtResponse(jwtService.generateAccessToken(user).toString()));
@@ -96,4 +104,3 @@ public class AuthController {
     }
 
 }
-

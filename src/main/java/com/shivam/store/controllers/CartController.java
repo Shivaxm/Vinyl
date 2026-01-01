@@ -72,18 +72,4 @@ public class CartController {
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(CartNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleCartNotFound(){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error:", "cart not found"));
-    }
-
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleProductNotFound(){
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error:", "product not found"));
-    }
-
-    @ExceptionHandler(CartItemNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleCartItemNotFound(){
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error:", "product not found"));
-    }
 }

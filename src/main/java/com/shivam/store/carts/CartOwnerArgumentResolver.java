@@ -9,7 +9,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -25,6 +28,8 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
     private final AuthService authService;
     private final JwtService jwtService;
     private final JwtConfig jwtConfig;
+    @Value("${app.cookies.secure:false}")
+    private boolean secureCookies;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -74,12 +79,14 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
             throw new IllegalStateException("Missing HttpServletResponse for guest token issuance");
         }
         String guestToken = jwtService.generateGuestToken().toString();
-        Cookie cookie = new Cookie(GUEST_TOKEN_COOKIE, guestToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(jwtConfig.getGuestExpiration());
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+        var cookie = ResponseCookie.from(GUEST_TOKEN_COOKIE, guestToken)
+                .httpOnly(true)
+                .secure(secureCookies)
+                .path("/")
+                .maxAge(jwtConfig.getGuestExpiration())
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return guestToken;
     }
 
@@ -87,11 +94,13 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
         if (response == null) {
             return;
         }
-        Cookie cookie = new Cookie(GUEST_TOKEN_COOKIE, "");
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+        var cookie = ResponseCookie.from(GUEST_TOKEN_COOKIE, "")
+                .httpOnly(true)
+                .secure(secureCookies)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }
