@@ -79,6 +79,64 @@ Then select **Store Local** in Postman’s environment dropdown (top-right). Thi
 ./mvnw test
 ```
 
+### Performance & quality (reproducible local measurements)
+
+> Measured locally; results vary by hardware/background load. Commands below reproduce the methodology.
+
+#### A) Cache impact (p95 latency, cold vs warm)
+- **Endpoint:** `GET /products`
+- **Cold p95:** 11.435 ms  
+- **Warm p95:** 5.037 ms  
+- **Δ:** 55.95% faster p95  
+- **Method:** 30 samples each  
+  - Cold: `FLUSHALL` before every request  
+  - Warm: `FLUSHALL` once, send 1 prime request, then measure
+
+Run:
+~~~bash
+docker compose up -d
+./mvnw -q spring-boot:run
+~~~
+
+Measure one sample:
+~~~bash
+docker exec <redis_container> redis-cli FLUSHALL
+curl -s -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8080/products
+~~~
+
+> Compute p95 from the 30 recorded `time_total` values for cold and warm.
+
+#### B) Throughput (ApacheBench)
+- **Endpoint:** `GET /products`
+- **Result:** 1,995.12 req/s  
+- **Command:** `ab -n 500 -c 20 http://127.0.0.1:8080/products`
+- **95th percentile latency (ab):** 23 ms
+
+Repro:
+~~~bash
+ab -n 500 -c 20 http://127.0.0.1:8080/products
+~~~
+
+#### C) Tests & coverage (JaCoCo)
+- **Test files:** 10  
+- **@Test methods:** 25  
+- **Line coverage:** 39.67% (288 / 726)  
+- **Report:** `target/site/jacoco/index.html`
+
+Repro:
+~~~bash
+./mvnw -q test jacoco:report
+~~~
+
+#### D) API scope
+- **Endpoints:** 22 (GET 8, POST 7, PUT 3, DELETE 4)  
+- **Entities:** 8 (`Address`, `Cart`, `CartItem`, `Category`, `Order`, `OrderItem`, `Product`, `User`)
+
+**Notes**
+- p95 focuses on tail latency (what users feel).
+- Cold vs warm isolates caching behavior without code changes.
+- `ab` is a quick, reproducible baseline load test.
+
 ### Stripe Checkout + webhooks (how to run locally)
 
 This backend exposes a webhook endpoint at:
