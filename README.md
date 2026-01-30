@@ -1,4 +1,5 @@
 ## Store (Spring Boot) — Backend
+[![CI](https://github.com/Shivaxm/Store/actions/workflows/ci.yml/badge.svg)](https://github.com/Shivaxm/Store/actions/workflows/ci.yml)
 
 This repo contains a **Spring Boot** backend for a simple store: products, carts (guest + authenticated), orders, JWT auth, Redis caching, Flyway migrations, and **Stripe Checkout** payments.
 
