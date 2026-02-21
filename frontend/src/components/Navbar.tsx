@@ -14,14 +14,14 @@ export function Navbar() {
 
   const linkClassName = ({ isActive }: { isActive: boolean }): string =>
     isActive
-      ? 'text-slate-900 font-semibold'
-      : 'text-slate-600 hover:text-slate-900 transition-colors';
+      ? 'text-indigo-600 font-semibold'
+      : 'text-stone-500 hover:text-stone-900 transition-colors';
 
   return (
-    <header className="border-b border-slate-200 bg-white/85 backdrop-blur">
+    <header className="border-b border-stone-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link to="/" className="text-lg font-bold tracking-tight text-slate-900">
-          Store Frontend
+        <Link to="/" className="text-xl font-bold tracking-tight text-indigo-600">
+          Vynl
         </Link>
 
         <nav className="flex items-center gap-4 text-sm">
@@ -39,7 +39,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-100"
+                className="rounded-lg border border-stone-300 px-3 py-1.5 text-stone-700 transition-colors hover:bg-stone-100"
               >
                 Logout
               </button>

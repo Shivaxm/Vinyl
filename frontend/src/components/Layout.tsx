@@ -13,7 +13,7 @@ export function Layout() {
   }, [cart.mergeNotice, cart.setMergeNotice]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-stone-50 text-stone-900">
       <Navbar />
       {cart.mergeNotice ? (
         <div className="mx-auto mt-4 max-w-6xl px-4 sm:px-6 lg:px-8">

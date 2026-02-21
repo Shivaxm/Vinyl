@@ -11,7 +11,7 @@ function statusClass(status: OrderDto['status']): string {
     return 'bg-rose-100 text-rose-700';
   }
   if (status === 'CANCELED') {
-    return 'bg-slate-200 text-slate-700';
+    return 'bg-stone-200 text-stone-700';
   }
   return 'bg-amber-100 text-amber-800';
 }
@@ -51,7 +51,7 @@ export function OrdersPage() {
   }, []);
 
   if (isLoading) {
-    return <div className="rounded-md border border-slate-200 bg-white p-6">Loading orders...</div>;
+    return <div className="rounded-md border border-stone-200 bg-white p-6 text-stone-500">Loading orders...</div>;
   }
 
   if (errorMessage) {
@@ -60,22 +60,22 @@ export function OrdersPage() {
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-bold tracking-tight">Order History</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-stone-900">Order History</h1>
 
       {orders.length === 0 ? (
-        <div className="rounded-md border border-slate-200 bg-white p-6 text-slate-600">No orders yet.</div>
+        <div className="rounded-md border border-stone-200 bg-white p-6 text-stone-500">No orders yet.</div>
       ) : (
         orders.map((order) => (
-          <article key={order.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <article key={order.id} className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-stone-500">
                 Order #{order.id} • {formatDate(order.createdAt)}
               </p>
               <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass(order.status)}`}>
                 {order.status}
               </span>
             </div>
-            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+            <ul className="mt-3 space-y-2 text-sm text-stone-700">
               {order.items.map((item) => (
                 <li key={`${order.id}-${item.product.id}`} className="flex items-center justify-between">
                   <span>
@@ -85,7 +85,7 @@ export function OrdersPage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-3 border-t border-slate-100 pt-3 text-right text-sm font-semibold text-slate-900">
+            <div className="mt-3 border-t border-stone-100 pt-3 text-right text-sm font-semibold text-stone-900">
               Total: {formatCurrency(order.totalPrice)}
             </div>
           </article>

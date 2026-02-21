@@ -28,20 +28,20 @@ export function CartPage() {
 
   if (!cart.cart || cart.cart.items.length === 0) {
     return (
-      <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold tracking-tight">Your Cart</h1>
-        <p className="text-slate-600">Your cart is empty. Add products from the catalog to continue.</p>
+      <section className="space-y-4 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+        <h1 className="text-2xl font-bold tracking-tight text-stone-900">Your Cart</h1>
+        <p className="text-stone-500">Your cart is empty. Add products from the catalog to continue.</p>
       </section>
     );
   }
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-bold tracking-tight">Your Cart</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-stone-900">Your Cart</h1>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+        <table className="min-w-full divide-y divide-stone-200">
+          <thead className="bg-stone-50 text-left text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-4 py-3">Product</th>
               <th className="px-4 py-3">Price</th>
@@ -50,16 +50,16 @@ export function CartPage() {
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-sm">
+          <tbody className="divide-y divide-stone-100 text-sm">
             {cart.cart.items.map((item) => (
               <tr key={item.product.id}>
-                <td className="px-4 py-3 font-medium text-slate-800">{item.product.name}</td>
+                <td className="px-4 py-3 font-medium text-stone-800">{item.product.name}</td>
                 <td className="px-4 py-3">{formatCurrency(item.product.price)}</td>
                 <td className="px-4 py-3">
                   <select
                     value={item.quantity}
                     onChange={(event) => cart.updateQuantity(item.product.id, Number(event.target.value))}
-                    className="rounded-md border border-slate-300 px-2 py-1"
+                    className="rounded-lg border border-stone-300 px-2 py-1"
                     disabled={cart.isLoading}
                   >
                     {[1, 2, 3, 4, 5].map((value) => (
@@ -76,7 +76,7 @@ export function CartPage() {
                       type="button"
                       onClick={() => cart.removeOne(item.product.id)}
                       disabled={cart.isLoading}
-                      className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed"
+                      className="rounded-lg border border-stone-300 px-2 py-1 text-xs text-stone-700 transition-colors hover:bg-stone-100 disabled:cursor-not-allowed"
                     >
                       -1
                     </button>
@@ -96,17 +96,17 @@ export function CartPage() {
         </table>
       </div>
 
-      <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
         <div>
-          <p className="text-sm text-slate-600">Cart total</p>
-          <p className="text-2xl font-bold text-slate-900">{formatCurrency(cart.cart.totalPrice)}</p>
+          <p className="text-sm text-stone-500">Cart total</p>
+          <p className="text-2xl font-bold text-stone-900">{formatCurrency(cart.cart.totalPrice)}</p>
         </div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => cart.clearCart()}
             disabled={cart.isLoading}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed"
+            className="rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-700 transition-colors hover:bg-stone-100 disabled:cursor-not-allowed"
           >
             Clear cart
           </button>
@@ -114,7 +114,7 @@ export function CartPage() {
             type="button"
             onClick={handleCheckout}
             disabled={cart.isLoading}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-stone-300"
           >
             Proceed to Checkout
           </button>
@@ -122,7 +122,7 @@ export function CartPage() {
       </div>
 
       {!auth.isAuthenticated ? (
-        <p className="text-sm text-slate-600">You can build a cart as guest. Login is required before checkout.</p>
+        <p className="text-sm text-stone-500">You can build a cart as guest. Login is required before checkout.</p>
       ) : null}
 
       {errorMessage ? (

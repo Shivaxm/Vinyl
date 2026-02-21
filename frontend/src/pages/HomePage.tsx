@@ -74,7 +74,7 @@ export function HomePage() {
   }
 
   if (isLoading) {
-    return <div className="rounded-md border border-slate-200 bg-white p-6">Loading catalog...</div>;
+    return <div className="rounded-md border border-stone-200 bg-white p-6 text-stone-500">Loading catalog...</div>;
   }
 
   if (errorMessage) {
@@ -84,8 +84,8 @@ export function HomePage() {
   return (
     <section className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Product Catalog</h1>
-        <p className="text-sm text-slate-600">Browse products, add items as a guest, then log in to merge your cart.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-stone-900">Product Catalog</h1>
+        <p className="text-sm text-stone-500">Browse products, add items as a guest, then log in to merge your cart.</p>
       </header>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -94,8 +94,8 @@ export function HomePage() {
           onClick={() => setActiveCategory('all')}
           className={`rounded-full px-3 py-1.5 text-sm ${
             activeCategory === 'all'
-              ? 'bg-slate-900 text-white'
-              : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+              ? 'bg-indigo-600 text-white'
+              : 'border border-stone-200 bg-white text-stone-600 transition-colors hover:bg-stone-50'
           }`}
         >
           All
@@ -107,8 +107,8 @@ export function HomePage() {
             onClick={() => setActiveCategory(category.id)}
             className={`rounded-full px-3 py-1.5 text-sm ${
               activeCategory === category.id
-                ? 'bg-slate-900 text-white'
-                : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                ? 'bg-indigo-600 text-white'
+                : 'border border-stone-200 bg-white text-stone-600 transition-colors hover:bg-stone-50'
             }`}
           >
             {category.label}
@@ -117,7 +117,7 @@ export function HomePage() {
       </div>
 
       {filteredProducts.length === 0 ? (
-        <div className="rounded-md border border-slate-200 bg-white p-6 text-slate-600">No products found for this category.</div>
+        <div className="rounded-md border border-stone-200 bg-white p-6 text-stone-500">No products found for this category.</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProducts.map((product) => (
