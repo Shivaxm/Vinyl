@@ -1,12 +1,12 @@
 package com.shivam.store.services;
 
 import com.shivam.store.dtos.OrderDto;
+import com.shivam.store.entities.OrderStatus;
 import com.shivam.store.entities.User;
 import com.shivam.store.exceptions.IncorrectUserException;
 import com.shivam.store.exceptions.OrderNotFoundException;
 import com.shivam.store.mappers.OrderMapper;
 import com.shivam.store.repositories.OrderRepository;
-import com.shivam.store.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final OrderMapper orderMapper;
     private final AuthService authService;
 
@@ -33,5 +32,20 @@ public class OrderService {
             throw new IncorrectUserException();
         }
         return orderMapper.toDto(order);
+    }
+
+    public void cancelPendingOrder(BigInteger orderId) {
+        var order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            return;
+        }
+        var user = authService.getUser();
+        if (!order.isPlacedBy(user)) {
+            throw new IncorrectUserException();
+        }
+
+        if (order.getStatus() == OrderStatus.PENDING) {
+            orderRepository.delete(order);
+        }
     }
 }

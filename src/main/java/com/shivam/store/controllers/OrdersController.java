@@ -36,6 +36,12 @@ public class OrdersController {
         return ResponseEntity.ok(orderService.getOrder(orderId));
     }
 
+    @DeleteMapping("/{orderId}/pending")
+    public ResponseEntity<Void> cancelPendingOrder(@PathVariable(name = "orderId") BigInteger orderId) {
+        orderService.cancelPendingOrder(orderId);
+        return ResponseEntity.noContent().build();
+    }
+
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleCartNotFound(){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error:", "order not found"));

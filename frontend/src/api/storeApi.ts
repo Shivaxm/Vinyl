@@ -99,4 +99,10 @@ export const storeApi = {
       method: 'GET',
     });
   },
+
+  cancelPendingOrder(orderId: number): Promise<void> {
+    return apiRequest<void>(`/orders/${orderId}/pending`, {
+      method: 'DELETE',
+    });
+  },
 };

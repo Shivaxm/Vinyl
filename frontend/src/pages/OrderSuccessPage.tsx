@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { storeApi } from '../api/storeApi';
+import { useCart } from '../hooks/useCart';
 import type { OrderDto } from '../types/api';
 import { formatCurrency } from '../utils/format';
 
 export function OrderSuccessPage() {
   const [params] = useSearchParams();
+  const cart = useCart();
   const [order, setOrder] = useState<OrderDto | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -30,6 +32,11 @@ export function OrderSuccessPage() {
         const data = await storeApi.getOrder(orderId);
         if (mounted) {
           setOrder(data);
+          try {
+            await cart.clearCart();
+          } catch {
+            setErrorMessage('Order completed, but cart refresh failed.');
+          }
         }
       } catch (error) {
         if (mounted) {
@@ -43,7 +50,7 @@ export function OrderSuccessPage() {
     return () => {
       mounted = false;
     };
-  }, [orderId]);
+  }, [cart, orderId]);
 
   return (
     <section className="mx-auto max-w-2xl space-y-4 rounded-xl border border-emerald-200 bg-white p-6 shadow-sm">

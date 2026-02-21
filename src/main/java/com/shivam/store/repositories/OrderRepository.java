@@ -1,6 +1,7 @@
 package com.shivam.store.repositories;
 
 import com.shivam.store.entities.Order;
+import com.shivam.store.entities.OrderStatus;
 import com.shivam.store.entities.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,7 @@ public interface OrderRepository extends JpaRepository<Order, BigInteger> {
 
     @Query("SELECT o from Order o where o.id = :orderId")
     Optional<Order> getOrderWithItems(@Param("orderId") BigInteger orderId);
+
+    @EntityGraph(attributePaths = "items.product")
+    Optional<Order> findFirstByCustomerAndStatusOrderByCreatedAtDesc(User customer, OrderStatus status);
 }
