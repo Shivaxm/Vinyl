@@ -1,15 +1,12 @@
 package com.shivam.store.payments;
 
 import com.shivam.store.carts.CartOwner;
-import com.shivam.store.entities.Cart;
 import com.shivam.store.entities.Order;
-import com.shivam.store.entities.OrderItem;
 import com.shivam.store.entities.OrderStatus;
 import com.shivam.store.exceptions.CartNotFoundException;
 import com.shivam.store.repositories.*;
 import com.shivam.store.services.AuthService;
 import com.shivam.store.services.CartService;
-import java.util.LinkedHashSet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,20 +27,14 @@ public class CheckoutService {
             throw new CartNotFoundException();
         }
 
-        var pendingOrder = orderRepository.findFirstByCustomerAndStatusOrderByCreatedAtDesc(user, OrderStatus.PENDING);
-        var order = pendingOrder
-                .map(existing -> refreshOrderFromCart(existing, cart))
-                .orElseGet(() -> Order.fromCart(cart, user));
-        var createdNewOrder = pendingOrder.isEmpty();
+        var order = Order.fromCart(cart, user);
         orderRepository.save(order);
         try{
             var session = paymentGateway.createCheckoutSession(order);
             return new OrderIdDto(order.getId(), session.getCheckoutUrl());
 
         } catch (PaymentException e) {
-            if (createdNewOrder) {
-                orderRepository.delete(order);
-            }
+            orderRepository.delete(order);
             throw e;
         }
     }
@@ -59,24 +50,5 @@ public class CheckoutService {
            }
        });
 
-    }
-
-    private Order refreshOrderFromCart(Order order, Cart cart) {
-        for (var item : new LinkedHashSet<>(order.getItems())) {
-            order.removeItem(item);
-        }
-
-        for (var cartItem : cart.getCartItems()) {
-            var orderItem = new OrderItem(
-                    order,
-                    cartItem.getProduct(),
-                    cartItem.getQuantity(),
-                    cartItem.getTotalPrice(),
-                    cartItem.getProduct().getPrice()
-            );
-            order.addItem(orderItem);
-        }
-
-        return order;
     }
 }

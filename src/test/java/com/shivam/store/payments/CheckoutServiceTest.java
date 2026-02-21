@@ -70,8 +70,6 @@ class CheckoutServiceTest {
     void createOrder_buildsOrderAndDoesNotClearCartBeforePaymentConfirmation() {
         when(authService.getUser()).thenReturn(user);
         when(cartService.getCurrentCartEntity(any())).thenReturn(cart);
-        when(orderRepository.findFirstByCustomerAndStatusOrderByCreatedAtDesc(user, OrderStatus.PENDING))
-                .thenReturn(Optional.empty());
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
             order.setId(123L);
@@ -107,8 +105,6 @@ class CheckoutServiceTest {
     void createOrder_whenPaymentFails_rollsBackOrderAndPropagates() {
         when(authService.getUser()).thenReturn(user);
         when(cartService.getCurrentCartEntity(any())).thenReturn(cart);
-        when(orderRepository.findFirstByCustomerAndStatusOrderByCreatedAtDesc(user, OrderStatus.PENDING))
-                .thenReturn(Optional.empty());
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
             order.setId(55L);
@@ -123,28 +119,6 @@ class CheckoutServiceTest {
         verify(orderRepository).save(captor.capture());
         verify(orderRepository).delete(captor.getValue());
         verify(cartService, never()).clearCurrentCart(any());
-    }
-
-    @Test
-    void createOrder_whenPendingOrderExists_reusesExistingOrder() {
-        var pendingOrder = new Order();
-        pendingOrder.setId(200L);
-        pendingOrder.setStatus(OrderStatus.PENDING);
-        pendingOrder.setCustomer(user);
-        pendingOrder.setItems(new LinkedHashSet<>());
-
-        when(authService.getUser()).thenReturn(user);
-        when(cartService.getCurrentCartEntity(any())).thenReturn(cart);
-        when(orderRepository.findFirstByCustomerAndStatusOrderByCreatedAtDesc(user, OrderStatus.PENDING))
-                .thenReturn(Optional.of(pendingOrder));
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(paymentGateway.createCheckoutSession(any())).thenReturn(new CheckoutSession("https://checkout/reused"));
-
-        var result = checkoutService.createOrder();
-
-        assertThat(result.getOrderId()).isEqualTo(200L);
-        assertThat(result.getCheckoutUrl()).isEqualTo("https://checkout/reused");
-        verify(orderRepository, never()).delete(any());
     }
 
     @Test
