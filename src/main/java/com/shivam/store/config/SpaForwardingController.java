@@ -16,7 +16,10 @@ public class SpaForwardingController {
         return "forward:/index.html";
     }
 
-    @GetMapping(value = {"/orders", "/orders/success", "/products/{id:[0-9]+}"}, produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(
+            value = {"/orders", "/orders/success", "/products/{id:[0-9]+}", "/checkout-success", "/checkout-cancel"},
+            produces = MediaType.TEXT_HTML_VALUE
+    )
     public String forwardHtmlConflictRoutes() {
         return "forward:/index.html";
     }

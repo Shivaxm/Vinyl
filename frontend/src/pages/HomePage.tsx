@@ -11,6 +11,7 @@ export function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<number | 'all'>('all');
+  const [pendingProductIds, setPendingProductIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     let mounted = true;
@@ -51,7 +52,25 @@ export function HomePage() {
   }, [activeCategory, products]);
 
   async function handleAddToCart(productId: number): Promise<void> {
-    await cart.addProduct(productId, 1);
+    if (pendingProductIds.has(productId)) {
+      return;
+    }
+
+    setPendingProductIds((previous) => {
+      const next = new Set(previous);
+      next.add(productId);
+      return next;
+    });
+
+    try {
+      await cart.addProduct(productId, 1);
+    } finally {
+      setPendingProductIds((previous) => {
+        const next = new Set(previous);
+        next.delete(productId);
+        return next;
+      });
+    }
   }
 
   if (isLoading) {
@@ -106,7 +125,7 @@ export function HomePage() {
               key={product.id}
               product={product}
               onAddToCart={handleAddToCart}
-              disabled={cart.isLoading}
+              disabled={pendingProductIds.has(product.id)}
             />
           ))}
         </div>

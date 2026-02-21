@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @Service
 public class StripePaymentGateway implements PaymentGateway {
-    @Value("${websiteUrl}")
+    @Value("${store.website-url}")
     private String webUrl;
     @Value("${stripe.webhookSecretKey}")
     private String webhookSecretKey;
