@@ -20,7 +20,7 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 let getAccessToken: GetAccessToken = () => null;
 let refreshAccessToken: RefreshAccessToken = async () => null;
@@ -99,6 +99,9 @@ async function requestInternal<T>(path: string, options: RequestOptions, hasRetr
   } = options;
 
   const headers = new Headers(requestHeaders);
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json');
+  }
   if (body !== undefined && !(body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }

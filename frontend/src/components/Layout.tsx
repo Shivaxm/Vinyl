@@ -1,9 +1,16 @@
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { Navbar } from './Navbar';
 
 export function Layout() {
   const cart = useCart();
+
+  useEffect(() => {
+    if (!cart.mergeNotice) return;
+    const timer = setTimeout(() => cart.setMergeNotice(null), 5000);
+    return () => clearTimeout(timer);
+  }, [cart.mergeNotice, cart.setMergeNotice]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">

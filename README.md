@@ -1,170 +1,102 @@
-## Store (Spring Boot) — Backend
+# Store — Full-Stack E-Commerce Application
 [![CI](https://github.com/Shivaxm/Store/actions/workflows/ci.yml/badge.svg)](https://github.com/Shivaxm/Store/actions/workflows/ci.yml)
 
-This repo contains a **Spring Boot** backend for a simple store: products, carts (guest + authenticated), orders, JWT auth, Redis caching, Flyway migrations, and **Stripe Checkout** payments.
+A full-stack e-commerce application with a Spring Boot backend and React frontend.
+Demonstrates JWT authentication with guest-to-authenticated cart merge, Stripe Checkout integration,
+Redis-backed caching, Flyway migrations, and a production-ready single-application deploy model.
 
-### Prerequisites
+**[Live Demo →](#)** _(add once deployed)_
+
+## Demo Flow
+
+1. Browse products and filter by category.
+2. Add items to cart as a guest (no login required).
+3. Register an account or log in.
+4. Watch your guest cart items merge into your authenticated cart.
+5. Proceed to Stripe Checkout.
+6. View order history with payment status.
+
+## Tech Stack
+
+- **Backend:** Java 21, Spring Boot 3.4, Spring Security, PostgreSQL, Redis, Flyway, Stripe API
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router
+- **Infrastructure:** Docker Compose, GitHub Actions CI, JaCoCo coverage
+
+## Prerequisites
 
 - **Java 21**
-- **Docker** (for Postgres + Redis via `docker-compose`)
-- (Optional) a Stripe account + Stripe CLI for webhook testing
+- **Docker** (optional, for Postgres + Redis in non-local profile)
+- **Node.js** (for frontend hot-reload dev mode only)
+- **Stripe account + Stripe CLI** (optional, for checkout/webhook testing)
 
-### Quick start (local)
+## Quick Start
 
-- **Option A (recommended for interviews): zero-setup local profile (no Docker)**
+### Option A: Single-app mode (recommended)
+
+Build everything into one Spring Boot JAR (backend + frontend static bundle):
+
+```bash
+./mvnw clean package -DskipTests
+java -jar target/store-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
+```
+
+Visit `http://localhost:8080`.
+
+### Option B: Local development (hot reload)
+
+Terminal 1 — backend:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-This runs with an in-memory H2 database and Flyway seeds, plus relaxed local defaults (so you can immediately use Postman).
-
-- **Option B: Start Postgres + Redis (Docker)**
+Terminal 2 — frontend:
 
 ```bash
-docker compose up -d
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-- **2) Create your local env file**
+Visit `http://localhost:5173`.
 
-```bash
-cp example.env .env
-```
+## API Documentation
 
-Fill in at least:
-- **JWT_SECRET**: must be long enough for HMAC (recommend 32+ chars)
-- **STRIPE_SECRET_KEY**: your Stripe secret key (starts with `sk_test_...`) if you want checkout to work
-- **STRIPE_WEBHOOK_SECRET_KEY**: signing secret (starts with `whsec_...`) if you want webhooks to work
+Primary demo is the frontend UI. For API-level verification:
 
-- **3) Run the API**
+- **Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
+- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
 
-```bash
-./mvnw spring-boot:run
-```
-
-The API starts on **`http://localhost:8080`** by default.
-
-### API docs (Swagger)
-
-This project includes SpringDoc OpenAPI. Once running:
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-
-### Postman (interviewer-friendly)
-
-You have two easy options:
-
-- **Option A: Import OpenAPI into Postman (recommended)**
-  - In Postman: **Import → Link/File**
-  - Use the OpenAPI endpoint: `http://localhost:8080/v3/api-docs`
-  - Postman will generate a collection automatically.
-
-- **Option B: Manual testing**
-  - **Login**: `POST /auth/login` → copy the `token` from the JSON response
-  - For authenticated endpoints, add header: `Authorization: Bearer <accessToken>`
-
-You can also import the included Postman collection JSON:
+Postman remains available as a secondary option:
 - `StoreAPIs.postman_collection.json`
-
-For a “zero-click” setup, also import the included Postman environment:
 - `Store.local.postman_environment.json`
 
-Then select **Store Local** in Postman’s environment dropdown (top-right). This supplies `{{protocol}}`, `{{host}}`, `{{port}}`, etc. to the collection without editing any requests.
+## Stripe Checkout Setup
 
-**Important for localhost:** this app uses cookies (`guestToken`, `refreshToken`). Cookies marked **Secure** won’t be sent back over plain HTTP, so for local/Postman set:
-- `COOKIE_SECURE=false` in `.env`
-
-### Running tests
-
-```bash
-./mvnw test
-```
-
-### Performance & quality (reproducible local measurements)
-
-> Measured locally; results vary by hardware/background load. Commands below reproduce the methodology.
-
-#### A) Cache impact (p95 latency, cold vs warm)
-- **Endpoint:** `GET /products`
-- **Cold p95:** 11.435 ms  
-- **Warm p95:** 5.037 ms  
-- **Δ:** 55.95% faster p95  
-- **Method:** 30 samples each  
-  - Cold: `FLUSHALL` before every request  
-  - Warm: `FLUSHALL` once, send 1 prime request, then measure
-
-Run:
-~~~bash
-docker compose up -d
-./mvnw -q spring-boot:run
-~~~
-
-Measure one sample:
-~~~bash
-docker exec <redis_container> redis-cli FLUSHALL
-curl -s -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8080/products
-~~~
-
-> Compute p95 from the 30 recorded `time_total` values for cold and warm.
-
-#### B) Throughput (ApacheBench)
-- **Endpoint:** `GET /products`
-- **Result:** 1,995.12 req/s  
-- **Command:** `ab -n 500 -c 20 http://127.0.0.1:8080/products`
-- **95th percentile latency (ab):** 23 ms
-
-Repro:
-~~~bash
-ab -n 500 -c 20 http://127.0.0.1:8080/products
-~~~
-
-#### C) Tests & coverage (JaCoCo)
-- **Test files:** 10  
-- **@Test methods:** 25  
-- **Line coverage:** 39.67% (288 / 726)  
-- **Report:** `target/site/jacoco/index.html`
-
-Repro:
-~~~bash
-./mvnw -q test jacoco:report
-~~~
-
-#### D) API scope
-- **Endpoints:** 22 (GET 8, POST 7, PUT 3, DELETE 4)  
-- **Entities:** 8 (`Address`, `Cart`, `CartItem`, `Category`, `Order`, `OrderItem`, `Product`, `User`)
-
-**Notes**
-- p95 focuses on tail latency (what users feel).
-- Cold vs warm isolates caching behavior without code changes.
-- `ab` is a quick, reproducible baseline load test.
-
-### Stripe Checkout + webhooks (how to run locally)
-
-This backend exposes a webhook endpoint at:
+Webhook endpoint:
 - `POST /checkout/webhook`
 
-The easiest way to test locally is **Stripe CLI**, which is why it asks you to “log in”.
-
-- **1) Install Stripe CLI**
-  - See Stripe’s docs: `https://stripe.com/docs/stripe-cli`
-
-- **2) Login (one-time)**
+1. Install Stripe CLI: `https://stripe.com/docs/stripe-cli`
+2. Authenticate once:
 
 ```bash
 stripe login
 ```
 
-- **3) Forward webhooks to your local server**
+3. Forward webhooks to local backend:
 
 ```bash
 stripe listen --forward-to localhost:8080/checkout/webhook
 ```
 
-The CLI prints a signing secret like `whsec_...`. Put that into:
-- `STRIPE_WEBHOOK_SECRET_KEY` in your `.env`
+4. Copy CLI signing secret (`whsec_...`) into `.env`:
+- `STRIPE_WEBHOOK_SECRET_KEY`
 
-- **Optional: trigger a webhook for a specific order**
-  - Call `POST /checkout` and copy the returned `orderId`
-  - Then trigger the event with overrides so the backend can match the order:
+5. Set Stripe secret API key in `.env`:
+- `STRIPE_SECRET_KEY=sk_test_...`
+
+Optional webhook trigger for a specific order:
 
 ```bash
 stripe trigger checkout.session.completed \
@@ -172,20 +104,48 @@ stripe trigger checkout.session.completed \
   --override "checkout_session:metadata[order_id]=<orderId>"
 ```
 
-- **4) Set your Stripe secret key**
+## Configuration Reference
 
-From the Stripe Dashboard (Developers → API keys), copy your test secret key (`sk_test_...`) into:
-- `STRIPE_SECRET_KEY` in your `.env`
-
-### Configuration reference
-
-The app loads `.env` via:
+`.env` is loaded via:
 - `spring.config.import=optional:file:.env[.properties]`
 
-Common settings (see `example.env`):
-- **DB_URL / DB_USER / DB_PASSWORD**
-- **REDIS_HOST / REDIS_PORT**
-- **SPRING_CACHE_TYPE**: `redis` (default) or `simple`
-- **WEBSITE_URL**: used to build Stripe success/cancel URLs
-- **JWT_SECRET / ACCESS_EXPIRATION / REFRESH_EXPIRATION / GUEST_EXPIRATION**
-- **STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET_KEY**
+Common settings (`example.env`):
+- `DB_URL / DB_USER / DB_PASSWORD`
+- `REDIS_HOST / REDIS_PORT / REDIS_PASSWORD`
+- `SPRING_CACHE_TYPE` (`redis` default, or `simple`)
+- `WEBSITE_URL` (Stripe success/cancel URL base)
+- `JWT_SECRET / ACCESS_EXPIRATION / REFRESH_EXPIRATION / GUEST_EXPIRATION`
+- `STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET_KEY`
+- `COOKIE_SECURE` (set `false` for localhost HTTP cookie testing)
+
+## Performance Benchmarks
+
+Measured locally; results vary by machine and background load.
+
+- **GET `/products` p95 latency:**
+  - Cold: **11.435 ms**
+  - Warm: **5.037 ms**
+  - Improvement: **55.95% faster p95**
+- **Throughput (`ab -n 500 -c 20 /products`):**
+  - **1,995.12 req/s**
+  - 95th percentile latency: **23 ms**
+- **Coverage (JaCoCo):**
+  - **39.67%** line coverage (288 / 726)
+- **Scope:**
+  - **22 endpoints** (GET 8, POST 7, PUT 3, DELETE 4)
+  - **8 entities** (`Address`, `Cart`, `CartItem`, `Category`, `Order`, `OrderItem`, `Product`, `User`)
+
+## Running Tests
+
+```bash
+./mvnw test
+```
+
+Coverage report:
+
+```bash
+./mvnw test jacoco:report
+```
+
+Open:
+- `target/site/jacoco/index.html`

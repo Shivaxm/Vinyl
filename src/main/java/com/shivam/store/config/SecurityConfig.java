@@ -2,11 +2,16 @@ package com.shivam.store.config;
 
 import com.shivam.store.entities.Role;
 import com.shivam.store.filters.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Set;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -28,6 +33,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @AllArgsConstructor
 public class SecurityConfig {
+    private static final Set<String> SPA_HTML_ROUTES = Set.of(
+            "/orders",
+            "/orders/success"
+    );
+    private static final Pattern PRODUCT_DETAIL_HTML_ROUTE = Pattern.compile("^/products/\\d+$");
+
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -56,6 +67,10 @@ public class SecurityConfig {
                         c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(c->c
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico", "/*.js", "/*.css").permitAll()
+                        .requestMatchers("/cart", "/login", "/register", "/checkout-success", "/checkout-cancel", "/orders/success").permitAll()
+                        .requestMatchers(SecurityConfig::isSpaHtmlRouteRequest).permitAll()
                         .requestMatchers("/carts/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
@@ -76,5 +91,14 @@ public class SecurityConfig {
                             response.setStatus(HttpStatus.FORBIDDEN.value())));
                 });
         return http.build();
+    }
+
+    private static boolean isSpaHtmlRouteRequest(HttpServletRequest request) {
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        if (accept == null || !accept.contains(MediaType.TEXT_HTML_VALUE)) {
+            return false;
+        }
+        String uri = request.getRequestURI();
+        return SPA_HTML_ROUTES.contains(uri) || PRODUCT_DETAIL_HTML_ROUTE.matcher(uri).matches();
     }
 }

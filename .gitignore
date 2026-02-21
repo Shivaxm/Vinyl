@@ -32,6 +32,12 @@ build/
 ### VS Code ###
 .vscode/
 .env
+.DS_Store
+store.code-workspace
+frontend/node_modules/
+frontend/node/
+frontend/dist/
+src/main/resources/static/
 
 # Local-only interview notes (intentionally not committed)
 INTERVIEW_GUIDE.md
