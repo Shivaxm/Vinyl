@@ -2,6 +2,7 @@ package com.shivam.store.payments;
 
 import com.shivam.store.carts.CartOwner;
 import com.shivam.store.entities.Order;
+import com.shivam.store.entities.OrderStatus;
 import com.shivam.store.exceptions.CartNotFoundException;
 import com.shivam.store.repositories.*;
 import com.shivam.store.services.AuthService;
@@ -30,7 +31,6 @@ public class CheckoutService {
         orderRepository.save(order);
         try{
             var session = paymentGateway.createCheckoutSession(order);
-            cartService.clearCurrentCart(CartOwner.authenticated(user));
             return new OrderIdDto(order.getId(), session.getCheckoutUrl());
 
         } catch (PaymentException e) {
@@ -42,8 +42,12 @@ public class CheckoutService {
     public void handleWebhookEvent(WebhookRequest webhookRequest) {
        paymentGateway.processPayment(webhookRequest).ifPresent(paymentResult ->{
            var order = orderRepository.findById(paymentResult.getOrderId()).orElseThrow();
+           var previousStatus = order.getStatus();
            order.setStatus(paymentResult.getPaymentStatus());
            orderRepository.save(order);
+           if (paymentResult.getPaymentStatus() == OrderStatus.PAID && previousStatus != OrderStatus.PAID) {
+               cartService.clearCurrentCart(CartOwner.authenticated(order.getCustomer()));
+           }
        });
 
     }

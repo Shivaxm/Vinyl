@@ -11,6 +11,7 @@ import com.shivam.store.carts.CartOwner;
 import com.shivam.store.entities.Cart;
 import com.shivam.store.entities.CartItem;
 import com.shivam.store.entities.Order;
+import com.shivam.store.entities.OrderStatus;
 import com.shivam.store.entities.Product;
 import com.shivam.store.entities.User;
 import com.shivam.store.exceptions.CartNotFoundException;
@@ -18,8 +19,10 @@ import com.shivam.store.payments.PaymentException;
 import com.shivam.store.repositories.OrderRepository;
 import com.shivam.store.services.AuthService;
 import com.shivam.store.services.CartService;
+import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,7 +67,7 @@ class CheckoutServiceTest {
     }
 
     @Test
-    void createOrder_buildsOrderAndClearsCart() {
+    void createOrder_buildsOrderAndDoesNotClearCartBeforePaymentConfirmation() {
         when(authService.getUser()).thenReturn(user);
         when(cartService.getCurrentCartEntity(any())).thenReturn(cart);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
@@ -80,10 +83,7 @@ class CheckoutServiceTest {
         assertThat(result.getOrderId()).isEqualTo(123L);
         assertThat(result.getCheckoutUrl()).isEqualTo("https://checkout");
 
-        ArgumentCaptor<CartOwner> captor = ArgumentCaptor.forClass(CartOwner.class);
-        verify(cartService).clearCurrentCart(captor.capture());
-        assertThat(captor.getValue().hasUser()).isTrue();
-        assertThat(captor.getValue().user().get()).isEqualTo(user);
+        verify(cartService, never()).clearCurrentCart(any());
     }
 
     @Test
@@ -118,6 +118,43 @@ class CheckoutServiceTest {
         ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
         verify(orderRepository).save(captor.capture());
         verify(orderRepository).delete(captor.getValue());
+        verify(cartService, never()).clearCurrentCart(any());
+    }
+
+    @Test
+    void handleWebhookEvent_whenPaid_clearsCurrentCart() {
+        var order = new Order();
+        order.setStatus(OrderStatus.PENDING);
+        order.setCustomer(user);
+
+        when(paymentGateway.processPayment(any()))
+                .thenReturn(Optional.of(new PaymentResult(BigInteger.valueOf(10L), OrderStatus.PAID)));
+        when(orderRepository.findById(BigInteger.valueOf(10L))).thenReturn(Optional.of(order));
+
+        checkoutService.handleWebhookEvent(new WebhookRequest("sig", "payload"));
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+        verify(orderRepository).save(order);
+        ArgumentCaptor<CartOwner> captor = ArgumentCaptor.forClass(CartOwner.class);
+        verify(cartService).clearCurrentCart(captor.capture());
+        assertThat(captor.getValue().hasUser()).isTrue();
+        assertThat(captor.getValue().user().get()).isEqualTo(user);
+    }
+
+    @Test
+    void handleWebhookEvent_whenNotPaid_doesNotClearCurrentCart() {
+        var order = new Order();
+        order.setStatus(OrderStatus.PENDING);
+        order.setCustomer(user);
+
+        when(paymentGateway.processPayment(any()))
+                .thenReturn(Optional.of(new PaymentResult(BigInteger.valueOf(11L), OrderStatus.FAILED)));
+        when(orderRepository.findById(BigInteger.valueOf(11L))).thenReturn(Optional.of(order));
+
+        checkoutService.handleWebhookEvent(new WebhookRequest("sig", "payload"));
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.FAILED);
+        verify(orderRepository).save(order);
         verify(cartService, never()).clearCurrentCart(any());
     }
 }
