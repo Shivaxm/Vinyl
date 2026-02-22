@@ -27,15 +27,13 @@ public class CacheConfig {
     @ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis", matchIfMissing = true)
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         BasicPolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
-                .allowIfSubType("com.shivam.store.dtos")
-                .allowIfSubType("java.math")
-                .allowIfSubType("java.util")
+                .allowIfSubType(Object.class)
                 .build();
 
         ObjectMapper redisMapper = new ObjectMapper();
         redisMapper.activateDefaultTyping(
                 typeValidator,
-                ObjectMapper.DefaultTyping.NON_FINAL,
+                ObjectMapper.DefaultTyping.EVERYTHING,
                 JsonTypeInfo.As.PROPERTY);
 
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisMapper);
