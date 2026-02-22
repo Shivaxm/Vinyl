@@ -5,7 +5,7 @@ A full-stack e-commerce application with a Spring Boot backend and React fronten
 Demonstrates JWT authentication with guest-to-authenticated cart merge, Stripe Checkout integration,
 Redis-backed caching, Flyway migrations, and a production-ready single-application deploy model.
 
-**[Live Demo →](#)** _(add once deployed)_
+**[Live Demo →](https://vinyl.up.railway.app)** 
 
 ## Demo Flow
 
