@@ -1,0 +1,216 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: k6/load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 20 max VUs, 55s max duration (incl. graceful stop):
+              * product_browsing: Up to 20 looping VUs for 50s over 3 stages (gracefulRampDown: 5s, exec: productBrowsing, gracefulStop: 30s)
+
+
+Run                [ 100% ] setup()
+product_browsing   [   0% ]
+
+Run                [ 100% ] setup()
+product_browsing   [   0% ]
+
+running (03.0s), 02/20 VUs, 0 complete and 0 interrupted iterations
+product_browsing   [   2% ] 02/20 VUs  00.9s/50.0s
+
+running (04.0s), 04/20 VUs, 0 complete and 0 interrupted iterations
+product_browsing   [   4% ] 04/20 VUs  01.9s/50.0s
+
+running (05.0s), 06/20 VUs, 1 complete and 0 interrupted iterations
+product_browsing   [   6% ] 06/20 VUs  02.9s/50.0s
+
+running (06.0s), 08/20 VUs, 3 complete and 0 interrupted iterations
+product_browsing   [   8% ] 08/20 VUs  03.9s/50.0s
+
+running (07.0s), 10/20 VUs, 4 complete and 0 interrupted iterations
+product_browsing   [  10% ] 10/20 VUs  04.9s/50.0s
+
+running (08.0s), 12/20 VUs, 5 complete and 0 interrupted iterations
+product_browsing   [  12% ] 12/20 VUs  05.9s/50.0s
+
+running (09.0s), 14/20 VUs, 9 complete and 0 interrupted iterations
+product_browsing   [  14% ] 14/20 VUs  06.9s/50.0s
+
+running (10.0s), 15/20 VUs, 13 complete and 0 interrupted iterations
+product_browsing   [  16% ] 15/20 VUs  07.9s/50.0s
+
+running (11.0s), 17/20 VUs, 17 complete and 0 interrupted iterations
+product_browsing   [  18% ] 17/20 VUs  08.9s/50.0s
+
+running (12.0s), 19/20 VUs, 21 complete and 0 interrupted iterations
+product_browsing   [  20% ] 19/20 VUs  09.9s/50.0s
+
+running (13.0s), 20/20 VUs, 27 complete and 0 interrupted iterations
+product_browsing   [  22% ] 20/20 VUs  10.9s/50.0s
+
+running (14.0s), 20/20 VUs, 33 complete and 0 interrupted iterations
+product_browsing   [  24% ] 20/20 VUs  11.9s/50.0s
+
+running (15.0s), 20/20 VUs, 40 complete and 0 interrupted iterations
+product_browsing   [  26% ] 20/20 VUs  12.9s/50.0s
+
+running (16.0s), 20/20 VUs, 46 complete and 0 interrupted iterations
+product_browsing   [  28% ] 20/20 VUs  13.9s/50.0s
+
+running (17.0s), 20/20 VUs, 52 complete and 0 interrupted iterations
+product_browsing   [  30% ] 20/20 VUs  14.9s/50.0s
+
+running (18.0s), 20/20 VUs, 59 complete and 0 interrupted iterations
+product_browsing   [  32% ] 20/20 VUs  15.9s/50.0s
+
+running (19.0s), 20/20 VUs, 65 complete and 0 interrupted iterations
+product_browsing   [  34% ] 20/20 VUs  16.9s/50.0s
+
+running (20.0s), 20/20 VUs, 71 complete and 0 interrupted iterations
+product_browsing   [  36% ] 20/20 VUs  17.9s/50.0s
+
+running (21.0s), 20/20 VUs, 77 complete and 0 interrupted iterations
+product_browsing   [  38% ] 20/20 VUs  18.9s/50.0s
+
+running (22.0s), 20/20 VUs, 82 complete and 0 interrupted iterations
+product_browsing   [  40% ] 20/20 VUs  19.9s/50.0s
+
+running (23.0s), 20/20 VUs, 90 complete and 0 interrupted iterations
+product_browsing   [  42% ] 20/20 VUs  20.9s/50.0s
+
+running (24.0s), 20/20 VUs, 95 complete and 0 interrupted iterations
+product_browsing   [  44% ] 20/20 VUs  21.9s/50.0s
+
+running (25.0s), 20/20 VUs, 102 complete and 0 interrupted iterations
+product_browsing   [  46% ] 20/20 VUs  22.9s/50.0s
+
+running (26.0s), 20/20 VUs, 109 complete and 0 interrupted iterations
+product_browsing   [  48% ] 20/20 VUs  23.9s/50.0s
+
+running (27.0s), 20/20 VUs, 113 complete and 0 interrupted iterations
+product_browsing   [  50% ] 20/20 VUs  24.9s/50.0s
+
+running (28.0s), 20/20 VUs, 119 complete and 0 interrupted iterations
+product_browsing   [  52% ] 20/20 VUs  25.9s/50.0s
+
+running (29.0s), 20/20 VUs, 128 complete and 0 interrupted iterations
+product_browsing   [  54% ] 20/20 VUs  26.9s/50.0s
+
+running (30.0s), 20/20 VUs, 133 complete and 0 interrupted iterations
+product_browsing   [  56% ] 20/20 VUs  27.9s/50.0s
+
+running (31.0s), 20/20 VUs, 137 complete and 0 interrupted iterations
+product_browsing   [  58% ] 20/20 VUs  28.9s/50.0s
+
+running (32.0s), 20/20 VUs, 146 complete and 0 interrupted iterations
+product_browsing   [  60% ] 20/20 VUs  29.9s/50.0s
+
+running (33.0s), 20/20 VUs, 151 complete and 0 interrupted iterations
+product_browsing   [  62% ] 20/20 VUs  30.9s/50.0s
+
+running (34.0s), 20/20 VUs, 156 complete and 0 interrupted iterations
+product_browsing   [  64% ] 20/20 VUs  31.9s/50.0s
+
+running (35.0s), 20/20 VUs, 167 complete and 0 interrupted iterations
+product_browsing   [  66% ] 20/20 VUs  32.9s/50.0s
+
+running (36.0s), 20/20 VUs, 170 complete and 0 interrupted iterations
+product_browsing   [  68% ] 20/20 VUs  33.9s/50.0s
+
+running (37.0s), 20/20 VUs, 177 complete and 0 interrupted iterations
+product_browsing   [  70% ] 20/20 VUs  34.9s/50.0s
+
+running (38.0s), 20/20 VUs, 184 complete and 0 interrupted iterations
+product_browsing   [  72% ] 20/20 VUs  35.9s/50.0s
+
+running (39.0s), 20/20 VUs, 188 complete and 0 interrupted iterations
+product_browsing   [  74% ] 20/20 VUs  36.9s/50.0s
+
+running (40.0s), 20/20 VUs, 196 complete and 0 interrupted iterations
+product_browsing   [  76% ] 20/20 VUs  37.9s/50.0s
+
+running (41.0s), 20/20 VUs, 201 complete and 0 interrupted iterations
+product_browsing   [  78% ] 20/20 VUs  38.9s/50.0s
+
+running (42.0s), 20/20 VUs, 207 complete and 0 interrupted iterations
+product_browsing   [  80% ] 20/20 VUs  39.9s/50.0s
+
+running (43.0s), 19/20 VUs, 214 complete and 0 interrupted iterations
+product_browsing   [  82% ] 19/20 VUs  40.9s/50.0s
+
+running (44.0s), 19/20 VUs, 221 complete and 0 interrupted iterations
+product_browsing   [  84% ] 19/20 VUs  41.9s/50.0s
+
+running (45.0s), 18/20 VUs, 225 complete and 0 interrupted iterations
+product_browsing   [  86% ] 18/20 VUs  42.9s/50.0s
+
+running (46.0s), 16/20 VUs, 230 complete and 0 interrupted iterations
+product_browsing   [  88% ] 16/20 VUs  43.9s/50.0s
+
+running (47.0s), 12/20 VUs, 239 complete and 0 interrupted iterations
+product_browsing   [  90% ] 12/20 VUs  44.9s/50.0s
+
+running (48.0s), 12/20 VUs, 242 complete and 0 interrupted iterations
+product_browsing   [  92% ] 12/20 VUs  45.9s/50.0s
+
+running (49.0s), 10/20 VUs, 245 complete and 0 interrupted iterations
+product_browsing   [  94% ] 10/20 VUs  46.9s/50.0s
+
+running (50.0s), 07/20 VUs, 249 complete and 0 interrupted iterations
+product_browsing   [  96% ] 07/20 VUs  47.9s/50.0s
+
+running (51.0s), 05/20 VUs, 255 complete and 0 interrupted iterations
+product_browsing   [  98% ] 05/20 VUs  48.9s/50.0s
+
+running (52.0s), 05/20 VUs, 255 complete and 0 interrupted iterations
+product_browsing   [ 100% ] 05/20 VUs  49.9s/50.0s
+
+running (53.0s), 03/20 VUs, 257 complete and 0 interrupted iterations
+product_browsing ↓ [ 100% ] 05/20 VUs  50s
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=143.83ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 525     9.742103/s
+    checks_succeeded...: 100.00% 525 out of 525
+    checks_failed......: 0.00%   0 out of 525
+
+    ✓ warmup products 200
+    ✓ GET /products is 200
+    ✓ GET /products/{id} is 200
+
+    HTTP
+    http_req_duration..............: avg=93.59ms min=78.89ms med=88.15ms max=225.03ms p(90)=109.91ms p(95)=143.83ms p(99)=161.57ms
+      { expected_response:true }...: avg=93.59ms min=78.89ms med=88.15ms max=225.03ms p(90)=109.91ms p(95)=143.83ms p(99)=161.57ms
+    http_req_failed................: 0.00%  0 out of 525
+    http_reqs......................: 525    9.742103/s
+
+    EXECUTION
+    iteration_duration.............: avg=3.2s    min=2.3s    med=3.2s    max=4.1s     p(90)=3.72s    p(95)=3.83s    p(99)=4s      
+    iterations.....................: 260    4.82466/s
+    vus............................: 3      min=0        max=20
+    vus_max........................: 20     min=20       max=20
+
+    NETWORK
+    data_received..................: 889 kB 17 kB/s
+    data_sent......................: 62 kB  1.2 kB/s
+
+
+
+
+running (53.9s), 00/20 VUs, 260 complete and 0 interrupted iterations
+product_browsing ✓ [ 100% ] 00/20 VUs  50s
