@@ -28,6 +28,7 @@ public class CacheConfig {
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         BasicPolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
                 .allowIfSubType("com.shivam.store.dtos")
+                .allowIfSubType("java.math")
                 .allowIfSubType("java.util")
                 .build();
 
