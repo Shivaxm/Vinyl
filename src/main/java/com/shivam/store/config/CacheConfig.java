@@ -1,10 +1,11 @@
 package com.shivam.store.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.CacheManager;
@@ -24,14 +25,25 @@ public class CacheConfig {
 
     @Bean
     @ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis", matchIfMissing = true)
-    public CacheManager cacheManager(RedisConnectionFactory connectionFactory,
-            ObjectProvider<ObjectMapper> objectMapperProvider) {
-        ObjectMapper objectMapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        BasicPolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType("com.shivam.store.dtos")
+                .allowIfSubType("java.util")
+                .build();
+
+        ObjectMapper redisMapper = new ObjectMapper();
+        redisMapper.activateDefaultTyping(
+                typeValidator,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY);
+
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisMapper);
+
         RedisCacheConfiguration baseConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(2))
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper.copy())));
+                        .fromSerializer(serializer));
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
         cacheConfigurations.put("products", baseConfig.entryTtl(Duration.ofMinutes(5)));
