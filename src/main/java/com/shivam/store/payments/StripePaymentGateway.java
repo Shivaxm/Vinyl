@@ -10,8 +10,11 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -25,10 +28,11 @@ public class StripePaymentGateway implements PaymentGateway {
     private String webhookSecretKey;
     public CheckoutSession createCheckoutSession(Order order) {
         try{
+            var baseUrl = resolveWebsiteUrl();
             var orderId = order.getId().toString();
             var builder = SessionCreateParams.builder().setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl(webUrl + "/checkout-success?orderId=" + order.getId())
-                    .setCancelUrl(webUrl + "/checkout-cancel?orderId=" + order.getId())
+                    .setSuccessUrl(baseUrl + "/checkout-success?orderId=" + order.getId())
+                    .setCancelUrl(baseUrl + "/checkout-cancel?orderId=" + order.getId())
                     .setClientReferenceId(orderId)
                     .putMetadata("order_id", orderId)
                     .setPaymentIntentData(
@@ -121,5 +125,42 @@ public class StripePaymentGateway implements PaymentGateway {
         return SessionCreateParams.LineItem.PriceData.ProductData.builder()
                 .setName(orderItem.getProduct().getName())
                 .build();
+    }
+
+    private String resolveWebsiteUrl() {
+        if (webUrl != null && !webUrl.isBlank()) {
+            return stripTrailingSlash(webUrl);
+        }
+
+        var attributes = RequestContextHolder.getRequestAttributes();
+        if (attributes instanceof ServletRequestAttributes servletAttributes) {
+            HttpServletRequest request = servletAttributes.getRequest();
+            String forwardedHost = request.getHeader("X-Forwarded-Host");
+            String forwardedProto = request.getHeader("X-Forwarded-Proto");
+
+            if (forwardedHost != null && !forwardedHost.isBlank()) {
+                String scheme = (forwardedProto == null || forwardedProto.isBlank())
+                        ? request.getScheme()
+                        : forwardedProto;
+                return stripTrailingSlash(scheme + "://" + forwardedHost);
+            }
+
+            String scheme = request.getScheme();
+            String host = request.getServerName();
+            int port = request.getServerPort();
+            boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
+                    || ("https".equalsIgnoreCase(scheme) && port == 443);
+            String origin = defaultPort ? scheme + "://" + host : scheme + "://" + host + ":" + port;
+            return stripTrailingSlash(origin);
+        }
+
+        throw new PaymentException("Unable to resolve website URL for Stripe redirects");
+    }
+
+    private String stripTrailingSlash(String value) {
+        if (value.endsWith("/")) {
+            return value.substring(0, value.length() - 1);
+        }
+        return value;
     }
 }
