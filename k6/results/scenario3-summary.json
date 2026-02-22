@@ -1,0 +1,223 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "groups": {},
+                "checks": {
+                        "warmup products 200": {
+                            "name": "warmup products 200",
+                            "path": "::setup::warmup products 200",
+                            "id": "e6314f469f7933028d9a1e4312f99a14",
+                            "passes": 5,
+                            "fails": 0
+                        }
+                    },
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a"
+            }
+        },
+        "checks": {
+            "POST /users is 201": {
+                "name": "POST /users is 201",
+                "path": "::POST /users is 201",
+                "id": "33e5247698b4f1eba82b8a73e2b84c52",
+                "passes": 11,
+                "fails": 0
+            },
+            "POST /auth/login is 200": {
+                "name": "POST /auth/login is 200",
+                "path": "::POST /auth/login is 200",
+                "id": "9bf6ef3b7c3ef09c55ab6f7736875022",
+                "passes": 11,
+                "fails": 0
+            },
+            "login returns token": {
+                "path": "::login returns token",
+                "id": "78c4c109214e8b5bb2cd4dc9ec3b7320",
+                "passes": 11,
+                "fails": 0,
+                "name": "login returns token"
+            },
+            "auth flow GET /products is 200": {
+                "name": "auth flow GET /products is 200",
+                "path": "::auth flow GET /products is 200",
+                "id": "956f378a219abab9441313935de983b7",
+                "passes": 11,
+                "fails": 0
+            },
+            "auth flow POST cart item is 200": {
+                "fails": 0,
+                "name": "auth flow POST cart item is 200",
+                "path": "::auth flow POST cart item is 200",
+                "id": "d7d0d10bdb735ddb9dc3dfcfcd792421",
+                "passes": 11
+            },
+            "auth flow GET /carts/current is 200": {
+                "path": "::auth flow GET /carts/current is 200",
+                "id": "3f01e6cb927b878abeea770996409b3a",
+                "passes": 11,
+                "fails": 0,
+                "name": "auth flow GET /carts/current is 200"
+            },
+            "auth flow GET /orders is 200": {
+                "id": "fff8d3bd321b43419dc3ecf117be9664",
+                "passes": 11,
+                "fails": 0,
+                "name": "auth flow GET /orders is 200",
+                "path": "::auth flow GET /orders is 200"
+            }
+        }
+    },
+    "metrics": {
+        "http_req_blocked": {
+            "med": 0.001,
+            "max": 47.37,
+            "p(90)": 0.005,
+            "p(95)": 36.619,
+            "p(99)": 42.36569999999999,
+            "avg": 3.3072535211267655,
+            "min": 0
+        },
+        "http_req_duration": {
+            "p(90)": 216.269,
+            "p(95)": 225.35299999999998,
+            "p(99)": 247.48859999999996,
+            "avg": 148.45767605633807,
+            "min": 86.741,
+            "med": 154.906,
+            "max": 287.32,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "vus": {
+            "min": 0,
+            "max": 5,
+            "value": 1
+        },
+        "iterations": {
+            "count": 11,
+            "rate": 0.3329322810897612
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 148.45767605633807,
+            "min": 86.741,
+            "med": 154.906,
+            "max": 287.32,
+            "p(90)": 216.269,
+            "p(95)": 225.35299999999998,
+            "p(99)": 247.48859999999996
+        },
+        "vus_max": {
+            "min": 5,
+            "max": 5,
+            "value": 5
+        },
+        "http_reqs": {
+            "count": 71,
+            "rate": 2.148926541579368
+        },
+        "http_req_waiting": {
+            "avg": 148.06701408450706,
+            "min": 86.385,
+            "med": 154.387,
+            "max": 286.996,
+            "p(90)": 215.709,
+            "p(95)": 225.13199999999998,
+            "p(99)": 247.31789999999995
+        },
+        "data_received": {
+            "count": 90964,
+            "rate": 2753.1683651862763
+        },
+        "iteration_duration": {
+            "max": 11211.70975,
+            "p(90)": 11135.059625,
+            "p(95)": 11173.3846875,
+            "p(99)": 11204.0447375,
+            "avg": 10427.318640090909,
+            "min": 9514.7915,
+            "med": 10479.471208
+        },
+        "http_req_connecting": {
+            "avg": 1.3842112676056337,
+            "min": 0,
+            "med": 0,
+            "max": 19.576,
+            "p(90)": 0,
+            "p(95)": 16.997,
+            "p(99)": 19.5452
+        },
+        "checks": {
+            "passes": 82,
+            "fails": 0,
+            "value": 1
+        },
+        "data_sent": {
+            "rate": 661.9601745194698,
+            "count": 21871
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 71,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "http_req_tls_handshaking": {
+            "p(90)": 0,
+            "p(95)": 19.1725,
+            "p(99)": 20.7171,
+            "avg": 1.6535915492957747,
+            "min": 0,
+            "med": 0,
+            "max": 20.925
+        },
+        "http_req_sending": {
+            "p(95)": 0.4784999999999999,
+            "p(99)": 0.5897999999999999,
+            "avg": 0.26732394366197176,
+            "min": 0.043,
+            "med": 0.245,
+            "max": 0.699,
+            "p(90)": 0.431
+        },
+        "http_req_receiving": {
+            "med": 0.111,
+            "max": 0.807,
+            "p(90)": 0.193,
+            "p(95)": 0.21649999999999991,
+            "p(99)": 0.4380999999999997,
+            "avg": 0.12333802816901412,
+            "min": 0.015
+        }
+    },
+    "setup_data": {
+        "productIds": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+        ],
+        "warmed": true
+    }
+}
