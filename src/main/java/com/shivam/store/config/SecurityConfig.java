@@ -93,14 +93,14 @@ public class SecurityConfig {
                         .referrerPolicy(referrer -> referrer
                                 .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                         .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                                .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; "
                                         + "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; "
-                                        + "connect-src 'self'; object-src 'none'; frame-ancestors 'none'; "
-                                        + "base-uri 'self'; form-action 'self'"))
+                                        + "frame-src https://js.stripe.com; connect-src 'self' https://api.stripe.com; "
+                                        + "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"))
                 )
                 .authorizeHttpRequests(c->c
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico", "/*.js", "/*.css").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico", "/*.js", "/*.css", "/*.html").permitAll()
                         .requestMatchers("/cart", "/login", "/register", "/checkout-success", "/checkout-cancel", "/orders/success").permitAll()
                         .requestMatchers(SecurityConfig::isSpaHtmlRouteRequest).permitAll()
                         .requestMatchers("/carts/**").permitAll()
