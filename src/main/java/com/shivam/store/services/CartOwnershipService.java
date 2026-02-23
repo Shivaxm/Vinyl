@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CartOwnershipService {
     private final CartRepository cartRepository;
+    private final JwtService jwtService;
 
     public void promoteToUser(String guestToken, User user) {
-        if (user == null || guestToken == null || guestToken.isBlank()) {
+        // OWASP A04: only merge carts for verified, non-expired guest tokens.
+        if (user == null || !isValidGuestToken(guestToken)) {
             return;
         }
 
@@ -44,5 +46,13 @@ public class CartOwnershipService {
 
         cartRepository.save(userCart);
         cartRepository.delete(guestCart);
+    }
+
+    private boolean isValidGuestToken(String guestToken) {
+        if (guestToken == null || guestToken.isBlank()) {
+            return false;
+        }
+        var jwt = jwtService.parseToken(guestToken);
+        return jwt != null && !jwt.isExpired() && jwt.isGuest();
     }
 }

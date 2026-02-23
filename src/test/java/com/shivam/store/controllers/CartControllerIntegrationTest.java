@@ -17,6 +17,7 @@ import com.shivam.store.repositories.CartRepository;
 import com.shivam.store.repositories.CategoryRepository;
 import com.shivam.store.repositories.ProductRepository;
 import com.shivam.store.repositories.UserRepository;
+import com.shivam.store.services.JwtService;
 import jakarta.servlet.http.Cookie;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +56,8 @@ class CartControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JwtService jwtService;
 
     @BeforeEach
     void cleanDatabase() {
@@ -97,8 +100,9 @@ class CartControllerIntegrationTest {
         product.setCategory(category);
         product = productRepository.save(product);
 
+        String guestToken = jwtService.generateGuestToken().toString();
         var cart = new Cart();
-        cart.setGuestToken("guest-token-123");
+        cart.setGuestToken(guestToken);
         cart = cartRepository.save(cart);
 
         SecurityContextHolder.clearContext();
@@ -107,7 +111,7 @@ class CartControllerIntegrationTest {
         payload.setId(product.getId());
 
         mockMvc.perform(post("/carts/current/items")
-                        .cookie(new Cookie("guestToken", "guest-token-123"))
+                        .cookie(new Cookie("guestToken", guestToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isOk())

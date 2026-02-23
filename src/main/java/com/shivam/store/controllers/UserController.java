@@ -47,6 +47,11 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
+        var currentUser = authService.getUser();
+        // OWASP A01: users can only read their own profile unless they are admins.
+        if (currentUser.getRole() != Role.ADMIN && !currentUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return userRepository.findById(id)
             .map(userMapper::toDto)
             .map(ResponseEntity::ok)
@@ -68,7 +73,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable(name = "id") long id, @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable(name = "id") long id, @Valid @RequestBody UpdateUserRequest request) {
         var currentUser = authService.getUser();
         if (currentUser.getRole() != Role.ADMIN && currentUser.getId() != id) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -99,7 +104,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/change-password")
-    public ResponseEntity<Void> changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<Void> changePassword(@PathVariable Long id, @Valid @RequestBody ChangePasswordRequest request) {
         var currentUser = authService.getUser();
         if (!currentUser.getId().equals(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

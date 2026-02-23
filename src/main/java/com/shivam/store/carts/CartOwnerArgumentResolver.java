@@ -70,7 +70,8 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
         return Arrays.stream(cookies)
                 .filter(cookie -> GUEST_TOKEN_COOKIE.equals(cookie.getName()))
                 .map(Cookie::getValue)
-                .filter(token -> token != null && !token.isBlank())
+                // OWASP A04/A08: only trust signed, non-expired guest JWTs from cookies.
+                .filter(this::isValidGuestToken)
                 .findFirst();
     }
 
@@ -102,5 +103,13 @@ public class CartOwnerArgumentResolver implements HandlerMethodArgumentResolver 
                 .sameSite("Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private boolean isValidGuestToken(String token) {
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+        var jwt = jwtService.parseToken(token);
+        return jwt != null && !jwt.isExpired() && jwt.isGuest();
     }
 }

@@ -11,6 +11,8 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -22,6 +24,8 @@ import java.util.Optional;
 
 @Service
 public class StripePaymentGateway implements PaymentGateway {
+    private static final Logger log = LoggerFactory.getLogger(StripePaymentGateway.class);
+
     @Value("${store.website-url}")
     private String webUrl;
     @Value("${stripe.webhookSecretKey}")
@@ -51,6 +55,8 @@ public class StripePaymentGateway implements PaymentGateway {
             return new  CheckoutSession(session.getUrl());
 
         } catch (StripeException e) {
+            // OWASP A09: security-relevant payment failures are logged without secrets.
+            log.error("security_event=stripe_checkout_session_failed type={}", e.getClass().getSimpleName());
             throw new PaymentException();
         }
 }
@@ -83,6 +89,8 @@ public class StripePaymentGateway implements PaymentGateway {
 
             }
         } catch (SignatureVerificationException e) {
+            // OWASP A04/A08/A09: webhook signature failures are tracked and rejected.
+            log.warn("security_event=stripe_webhook_signature_verification_failed");
             throw new WebhookSignatureException("Invalid Stripe webhook signature");
         }
     }
@@ -96,13 +104,29 @@ public class StripePaymentGateway implements PaymentGateway {
             if (orderId == null && session.getMetadata() != null) {
                 orderId = session.getMetadata().get("order_id");
             }
-            return orderId == null ? Optional.empty() : Optional.of(new BigInteger(orderId));
+            if (orderId == null) {
+                return Optional.empty();
+            }
+            try {
+                return Optional.of(new BigInteger(orderId));
+            } catch (NumberFormatException ex) {
+                log.warn("security_event=stripe_webhook_invalid_order_id source=session");
+                return Optional.empty();
+            }
         }
 
         if (stripeObject instanceof PaymentIntent paymentIntent) {
             var metadata = paymentIntent.getMetadata();
             var orderId = metadata == null ? null : metadata.get("order_id");
-            return orderId == null ? Optional.empty() : Optional.of(new BigInteger(orderId));
+            if (orderId == null) {
+                return Optional.empty();
+            }
+            try {
+                return Optional.of(new BigInteger(orderId));
+            } catch (NumberFormatException ex) {
+                log.warn("security_event=stripe_webhook_invalid_order_id source=payment_intent");
+                return Optional.empty();
+            }
         }
 
         return Optional.empty();

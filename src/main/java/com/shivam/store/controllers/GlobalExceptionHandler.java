@@ -9,6 +9,8 @@ import com.shivam.store.payments.WebhookSignatureException;
 import com.shivam.store.exceptions.ProductNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorDto> handleUnreadableMessage() {
@@ -42,7 +45,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CartNotFoundException.class)
     public ResponseEntity<ErrorDto> handleCartNotFound(Exception e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorDto(e.getMessage()));
+                .body(new ErrorDto("Cart not found"));
     }
 
     @ExceptionHandler(ProductNotFoundException.class)
@@ -54,7 +57,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CartItemNotFoundException.class)
     public ResponseEntity<ErrorDto> handleBadCartRequest(Exception e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorDto(e.getMessage()));
+                .body(new ErrorDto("Invalid cart request"));
     }
 
     @ExceptionHandler(PaymentException.class)
@@ -72,6 +75,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorDto> handleIllegalArgument(IllegalArgumentException exception) {
         return ResponseEntity.badRequest()
-                .body(new ErrorDto(exception.getMessage()));
+                .body(new ErrorDto("Invalid request"));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorDto> handleUnexpectedException(Exception exception) {
+        // OWASP A05/A09: avoid leaking internal details while keeping server-side diagnostics.
+        log.error("security_event=unexpected_server_error type={}", exception.getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorDto("Internal server error"));
     }
 }

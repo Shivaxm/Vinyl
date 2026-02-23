@@ -54,7 +54,7 @@ public class JwtService {
         try {
             var claims = getClaims(token);
             return new Jwt(jwtConfig.getSecretKey(),  claims);
-        }  catch (JwtException e) {
+        }  catch (RuntimeException e) {
             return null;
         }
     }

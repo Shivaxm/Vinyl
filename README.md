@@ -118,6 +118,11 @@ Common settings (`example.env`):
 - `STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET_KEY`
 - `COOKIE_SECURE` (set `false` for localhost HTTP cookie testing)
 
+## Security
+
+- **[OWASP Top 10 Hardening](SECURITY.md)** — Documented protections against each OWASP Top 10 category
+- Rate limiting, security headers, input validation, auth hardening, and security event logging
+
 ## Performance Benchmarks
 
 Measured locally; results vary by machine and background load.

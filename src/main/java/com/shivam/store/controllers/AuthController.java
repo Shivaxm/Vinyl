@@ -8,10 +8,12 @@ import com.shivam.store.mappers.UserMapper;
 import com.shivam.store.repositories.UserRepository;
 import com.shivam.store.services.CartOwnershipService;
 import com.shivam.store.services.JwtService;
-import com.shivam.store.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -43,7 +47,9 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(
                         userRequest.getEmail(), userRequest.getPassword()));
 
-        var user = userRepository.findByEmail(userRequest.getEmail()).orElseThrow();
+        // OWASP A07: keep login errors generic; avoid account-enumeration signals.
+        var user = userRepository.findByEmail(userRequest.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
         var refreshToken = jwtService.generateRefreshToken(user);
 
         var cookie = ResponseCookie.from("refreshToken", refreshToken.toString())
@@ -99,8 +105,18 @@ public class AuthController {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Void> handleBadLogin(Exception exception) {
+    public ResponseEntity<Void> handleBadLogin(Exception exception, HttpServletRequest request) {
+        // OWASP A09: record failed login attempts without logging credentials.
+        log.warn("security_event=login_failed ip={}", resolveClientIp(request));
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
 }

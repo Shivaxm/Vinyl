@@ -3,6 +3,7 @@ package com.shivam.store.controllers;
 import com.shivam.store.dtos.ProductDto;
 import com.shivam.store.dtos.RegisterProductRequest;
 import com.shivam.store.services.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +30,13 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDto> createProduct(@RequestBody RegisterProductRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<ProductDto> createProduct(@Valid @RequestBody RegisterProductRequest request, UriComponentsBuilder uriBuilder) {
         var productDto = productService.createProduct(request);
         var uri = uriBuilder.path("/products/{id}").buildAndExpand(productDto.getId()).toUri();
         return ResponseEntity.created(uri).body(productDto);
     }
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto> updateProduct(@PathVariable long id, @RequestBody ProductDto productDto) {
+    public ResponseEntity<ProductDto> updateProduct(@PathVariable long id, @Valid @RequestBody ProductDto productDto) {
         return ResponseEntity.ok(productService.updateProduct(id, productDto));
     }
 

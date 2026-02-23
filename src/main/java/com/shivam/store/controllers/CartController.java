@@ -38,7 +38,7 @@ public class CartController {
     @Operation(summary = "Adds item to cart")
     public ResponseEntity<CartItemDto> addProduct(
             CartOwner owner,
-            @RequestBody CartItemRequestDto prod) {
+            @Valid @RequestBody CartItemRequestDto prod) {
         var cartItemDto = cartService.addProductToCurrentCart(prod.getId(), owner);
         return ResponseEntity.ok(cartItemDto);
     }

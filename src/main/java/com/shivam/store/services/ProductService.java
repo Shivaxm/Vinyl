@@ -6,7 +6,9 @@ import com.shivam.store.exceptions.ProductNotFoundException;
 import com.shivam.store.mappers.ProductMapper;
 import com.shivam.store.repositories.CategoryRepository;
 import com.shivam.store.repositories.ProductRepository;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -39,11 +41,11 @@ public class ProductService {
         if (categoryId != null) {
             return productRepository.findByCategory_Id(categoryId).stream()
                     .map(productMapper::toDto)
-                    .toList();
+                    .collect(Collectors.toCollection(ArrayList::new));
         }
         return productRepository.findAll().stream()
                 .map(productMapper::toDto)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Cacheable(cacheNames = PRODUCT_BY_ID_CACHE, key = "#id", unless = "#result == null")
