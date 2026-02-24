@@ -4,6 +4,7 @@ import com.shivam.store.entities.Role;
 import com.shivam.store.filters.JwtAuthenticationFilter;
 import com.shivam.store.filters.LoginRateLimitFilter;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -142,6 +143,11 @@ public class SecurityConfig {
         // OWASP A05: explicit origin allowlist avoids wildcard CORS.
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
+        // Permit known deploy/local origin patterns so Vite crossorigin asset requests are not rejected.
+        List<String> allowedOriginPatterns = new ArrayList<>();
+        allowedOriginPatterns.add("https://vinyl.up.railway.app");
+        allowedOriginPatterns.add("http://localhost:*");
+        configuration.setAllowedOriginPatterns(allowedOriginPatterns);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         configuration.setAllowCredentials(true);
