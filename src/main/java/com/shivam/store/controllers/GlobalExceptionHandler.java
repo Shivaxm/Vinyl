@@ -82,6 +82,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorDto> handleNoResourceFound(NoResourceFoundException exception) {
         // OWASP A05/A09: return correct 404 semantics for missing resources and avoid noisy 500s.
+        if ("favicon.ico".equals(exception.getResourcePath())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorDto("Not found"));
+        }
         log.warn("security_event=resource_not_found method={} path={}",
                 exception.getHttpMethod(), exception.getResourcePath());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
